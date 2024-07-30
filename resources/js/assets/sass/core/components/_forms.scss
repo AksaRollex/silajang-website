@@ -1,0 +1,17 @@
+//
+// Forms
+//
+
+// Import Dependencies
+@import "forms/labels";
+@import "forms/form-control";
+@import "forms/floating-labels";
+@import "forms/form-select";
+@import "forms/form-check";
+@import "forms/input-group";
+@import "forms/floating-labels";
+@import "forms/required";
+
+.ck.ck-editor__main>.ck-editor__editable {
+    background: var(--bs-gray-100) !important;
+}
