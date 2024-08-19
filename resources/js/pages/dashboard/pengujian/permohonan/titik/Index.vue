@@ -121,6 +121,8 @@ interface TitikPermohonan {
     payment?: {
         id: number,
     }
+    status_tte: number,
+    status_pembayaran: number,
 }
 import { createColumnHelper } from "@tanstack/vue-table";
 import { usePermohonan, useUmpanBalik } from '@/services';
@@ -296,21 +298,16 @@ export default defineComponent({
             column.accessor("uuid", {
                 header: "Aksi",
                 cell: (cell) => h('div', { class: 'd-flex gap-2 flex-wrap' }, [
-                    cell.row.original.status >= 9 && h('button', {
+                    cell.row.original.status_tte == 1 && cell.row.original.status_pembayaran == 1 && h('button', {
                         class: 'btn btn-sm btn-success d-flex', onClick: () => {
-                            if (user.has_umpan_balik || hasUmpanBalik.value) {
-                                if (previewReport.value) {
-                                    block('#modal-report .modal-body')
-                                    reportUrl.value = `/api/v1/report/${cell.getValue()}/lhu?token=${localStorage.getItem('auth_token')}`
+                            if (previewReport.value) {
+                                block('#modal-report .modal-body')
+                                reportUrl.value = `/api/v1/report/${cell.getValue()}/lhu?token=${localStorage.getItem('auth_token')}`
 
-                                    iframeReport.value.contentWindow.location.reload()
-                                    $('#modal-report').modal('show')
-                                } else {
-                                    downloadReport(`/report/${cell.getValue()}/lhu`)
-                                }
+                                iframeReport.value.contentWindow.location.reload()
+                                $('#modal-report').modal('show')
                             } else {
-                                $('#modal-umpan-balik').modal('show')
-                                onReport.value = cell.getValue()
+                                downloadReport(`/report/${cell.getValue()}/lhu`)
                             }
                         }
                     }, [h('i', { class: 'la la-file-pdf fs-2' }), ' Sertifikat LHU']),

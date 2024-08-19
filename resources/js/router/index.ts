@@ -183,6 +183,15 @@ const routes: Array<RouteRecordRaw> = [
 
       // Pembayaran
       {
+        path: "dashboard/pembayaran/multi-pembayaran",
+        name: "dashboard.pembayaran.multi-pembayaran",
+        component: () => import("@/pages/dashboard/pembayaran/multi-pembayaran/Index.vue"),
+        meta: {
+          breadcumbs: ["Pembayaran", "Multi Pembayaran"],
+          permission: "pembayaran-multi-pembayaran",
+        }
+      },
+      {
         path: "dashboard/pembayaran/pengujian",
         name: "dashboard.pembayaran.pengujian",
         component: () => import("@/pages/dashboard/pembayaran/pengujian/Index.vue"),

@@ -2,16 +2,26 @@
   <div class="card">
     <div class="card-header align-items-center">
       <h2 class="mb-0">Laporan Hasil Pengujian</h2>
-      <!-- <select2 placeholder="Pilih Tahun" class="form-select-solid mw-200px mw-md-100" name="tahun" :options="tahuns"
-                v-model="tahun">
-            </select2> -->
-      <div>
-        <date-picker v-model="date" :config="{ mode: 'range' }" style="width: 225px"></date-picker>
+      <div class="d-flex align-items-center gap-5">
+        <!-- <div>
+          <date-picker v-model="date" :config="{ mode: 'range' }" style="width: 225px"></date-picker>
+        </div> -->
+        <select2 placeholder="Pilih Tahun" class="form-select-solid mw-200px mw-md-100" name="tahun" :options="tahuns"
+          v-model="tahun">
+        </select2>
+        <select2 placeholder="Pilih Bulan" class="form-select-solid mw-200px mw-md-100" name="bulan" :options="bulans"
+          v-model="bulan">
+        </select2>
       </div>
     </div>
     <div class="card-body">
       <paginate ref="paginate" id="table-lhu" url="/report" :columns="columns" queryKey="lhu"
-        :payload="{ status: [9, 10, 11], start, end }">
+        :payload="{ 
+          status: [9, 10, 11], 
+          // start, 
+          // end,
+          tahun,
+          bulan }">
       </paginate>
     </div>
   </div>
@@ -138,6 +148,7 @@ interface TitikPermohonan {
   pembayaran: number,
   tanggal_pengambilan: string,
   tanggal_selesai: string,
+  tanggal_tte: string,
   text_status: string,
   status_pembayaran: number,
   text_status_pembayaran: string,
@@ -186,12 +197,27 @@ export default defineComponent({
     const selected = ref<string | any>("");
     const openDetail = ref<boolean>(false);
 
-    const date = ref<any>(`${moment().startOf('month').format('YYYY-MM-DD')} to ${moment().format('YYYY-MM-DD')}`)
+    // const date = ref<any>(`${moment().startOf('month').format('YYYY-MM-DD')} to ${moment().format('YYYY-MM-DD')}`)
     const tahun = ref(new Date().getFullYear());
     const tahuns = ref<any[]>([]);
     for (let i = tahun.value; i >= 2022; i--) {
       tahuns.value.push({ id: i, text: i });
     }
+    const bulan = ref(new Date().getMonth() + 1)
+    const bulans = ref<any[]>([
+      { id: 1, text: "Januari" },
+      { id: 2, text: "Februari" },
+      { id: 3, text: "Maret" },
+      { id: 4, text: "April" },
+      { id: 5, text: "Mei" },
+      { id: 6, text: "Juni" },
+      { id: 7, text: "Juli" },
+      { id: 8, text: "Agustus" },
+      { id: 9, text: "September" },
+      { id: 10, text: "Oktober" },
+      { id: 11, text: "November" },
+      { id: 12, text: "Desember" },
+    ])
 
     const iframeReport = ref<any>(null)
     const { download: downloadReport } = useDownloadPdf({
@@ -239,6 +265,9 @@ export default defineComponent({
       column.accessor("sertifikat", {
         header: "Salinan ke...",
         cell: cell => cell.getValue() ? h('span', { class: 'badge badge-light-info' }, `Salinan ke-${cell.getValue()}`) : h('span', { class: 'badge badge-light-warning' }, 'Belum Dicetak')
+      }),
+      column.accessor("tanggal_tte", {
+        header: "Tanggal TTE",
       }),
       column.accessor("status_tte", {
         header: "Status TTE",
@@ -376,13 +405,15 @@ export default defineComponent({
       paginate,
       tahun,
       tahuns,
+      bulan,
+      bulans,
       reportUrl,
       block, unblock,
       iframeReport,
       refresh: () => {
         paginate.value?.refetch()
       },
-      date,
+      // date,
       files,
       fileTypes,
       onUpadateFiles,
@@ -441,7 +472,7 @@ export default defineComponent({
       this.unblock('#modal-report .modal-body')
       this.refresh()
 
-      axios.post(`/permohonan/titik/${this.selected}/status-tte`, { column: "status_tte" }).then(res => {
+      axios.post(`/permohonan/\w/${this.selected}/status-tte`, { column: "status_tte" }).then(res => {
         if (res.data.status_tte === 1) toast.success('Pengajuan TTE Berhasil')
         else if (res.data.status_tte === 0) toast.error('Pengajuan TTE Gagal')
       })

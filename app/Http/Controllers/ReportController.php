@@ -37,7 +37,7 @@ class ReportController extends Controller
             $page = (($request->page) ? $request->page - 1 : 0);
 
             DB::statement('set @no=0+' . $page * $per);
-            $data = TitikPermohonan::with(['permohonan.user'])->where(function ($q) use ($request) {
+            $data = TitikPermohonan::with(['permohonan.user.detail'])->where(function ($q) use ($request) {
                 $q->where('kode', 'LIKE', '%' . $request->search . '%');
                 $q->orWhere('lokasi', 'LIKE', '%' . $request->search . '%');
                 $q->orWhereHas('permohonan', function ($q) use ($request) {
@@ -47,11 +47,16 @@ class ReportController extends Controller
                 });
             })->when(isset($request->status), function ($q) use ($request) {
                 $q->whereIn('status', $request->status);
-            })->whereBetween('created_at', [Carbon::parse($request->start)->startOfDay(), Carbon::parse($request->end)->endOfDay()])->orderBy('kode', 'DESC')->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
+            })
+            // ->whereBetween('created_at', [Carbon::parse($request->start)->startOfDay(), Carbon::parse($request->end)->endOfDay()])
+            ->whereYear('created_at', $request->tahun)->whereMonth('created_at', $request->bulan)
+            ->orderBy('kode', 'DESC')
+            ->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
 
             $data->map(function ($a) {
                 $a->tanggal_diterima = $a->tanggal_diterima ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_diterima)->format('Y-m-d')) : '-';
                 $a->tanggal_selesai = $a->tanggal_selesai ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_selesai)->format('Y-m-d')) : '-';
+                $a->tanggal_tte = $a->tanggal_tte ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_tte)->format('Y-m-d')) : '-';
             });
 
             return response()->json($data);
@@ -306,7 +311,7 @@ class ReportController extends Controller
 
         $canvas = $pdf->getDomPDF()->getCanvas();
         $fontMetrics = new FontMetrics($canvas, $options);
-        $canvas->page_text(380, 1170, "Halaman {PAGE_NUM} dari {PAGE_COUNT}", $fontMetrics->get_font("Arial", "bold"), 10, array(0, 0, 0));
+        $canvas->page_text(250, 770, "Halaman {PAGE_NUM} dari {PAGE_COUNT}", $fontMetrics->get_font("Arial", "bold"), 10, array(0, 0, 0));
 
         return $pdf->stream('PREVIEW-LAPORAN-HASIL-PENGUJIAN-' . $data->kode . '.pdf');
     }
@@ -351,7 +356,7 @@ class ReportController extends Controller
 
         $canvas = $pdf->getDomPDF()->getCanvas();
         $fontMetrics = new FontMetrics($canvas, $options);
-        $canvas->page_text(380, 1170, "Halaman {PAGE_NUM} dari {PAGE_COUNT}", $fontMetrics->get_font("Arial", "bold"), 10, array(0, 0, 0));
+        $canvas->page_text(250, 770, "Halaman {PAGE_NUM} dari {PAGE_COUNT}", $fontMetrics->get_font("Arial", "bold"), 10, array(0, 0, 0));
 
         if ($base64) {
             if (!file_exists(storage_path('app/private/lhu'))) {
@@ -384,7 +389,7 @@ class ReportController extends Controller
         }
     }
 
-    public function reportLHUWord(Request $request, $uuid, $save = false)
+    public function reportLHUWord(Request $request, $uuid, $save = false, $tte = false)
     {
         $data = TitikPermohonan::with(['permohonan' => function ($q) {
             $q->with(['jasaPengambilan', 'user.detail']);
@@ -392,6 +397,12 @@ class ReportController extends Controller
 
         if (!$data) {
             return abort(404);
+        }
+
+        $tte = filter_var($tte, FILTER_VALIDATE_BOOLEAN);
+
+        if (!$tte && $data->file_lhu && file_exists(storage_path('app/private/' . $data->file_lhu))) {
+            return response()->file(storage_path('app/private/' . $data->file_lhu));
         }
 
         $parametersUji = $data->parameters()->get();
@@ -473,6 +484,14 @@ class ReportController extends Controller
         $template->setValue('nama_pengirim', $ttd->nama);
         $template->setValue('nip_pengirim', $ttd->nip);
 
+        if (isset($tte) && $tte){
+            $template->setValue('tte', 'Dokumen ini telah ditandatangani secara elektronik yang diterbitkan oleh Balai Sertifikasi Elektronik (BSrE), BSSN ');
+            $template->setImageValue('img', array('path' => 'media/bse.png', 'width' => 110, 'height' => 60, 'ratio' => false));
+        } else {
+            $template->setValue('tte', '');
+            $template->setValue('img', '');
+        }
+
         $table = new Table(['borderSize' => 6, 'borderColor' => 'black', 'width' => 10500, 'unit' => TblWidth::TWIP]);
 
         $table->addRow(null, ['exactHeight' => true]);
@@ -498,7 +517,11 @@ class ReportController extends Controller
                 // $hasil_uji = str_replace('<', '&lt;', $param->pivot->hasil_uji_pembulatan);
                 // $hasil_uji = str_replace('>', '&gt;', $hasil_uji);
                 $table->addCell(1000)->addText(htmlspecialchars($param->pivot->hasil_uji_pembulatan, ENT_QUOTES, 'UTF-8'), ['name' => 'Times New Roman', 'size' => 10, 'bold' => $tidakMemenuhi], ['spaceAfter' => 0]);
-                $table->addCell(1300)->addText(htmlspecialchars($param->pivot->baku_mutu, ENT_QUOTES, 'UTF-8'), ['name' => 'Times New Roman', 'size' => 10, 'bold' => $tidakMemenuhi], ['spaceAfter' => 0]);
+                if ($data->baku_mutu){
+                    $table->addCell(1300)->addText(htmlspecialchars($param->pivot->baku_mutu, ENT_QUOTES, 'UTF-8'), ['name' => 'Times New Roman', 'size' => 10, 'bold' => $tidakMemenuhi], ['spaceAfter' => 0]);
+                } else {
+                    $table->addCell(1300)->addText(htmlspecialchars('-', ENT_QUOTES, 'UTF-8'), ['name' => 'Times New Roman', 'size' => 10, 'bold' => $tidakMemenuhi], ['spaceAfter' => 0]);
+                }
                 $table->addCell(2400)->addText(htmlspecialchars($param->metode, ENT_QUOTES, 'UTF-8'), ['name' => 'Times New Roman', 'size' => 10, 'bold' => $tidakMemenuhi], ['spaceAfter' => 0]);
                 $table->addCell(1250)->addText('', ['name' => 'Times New Roman', 'size' => 10, 'bold' => $tidakMemenuhi], ['spaceAfter' => 0]);
             }
@@ -700,7 +723,7 @@ class ReportController extends Controller
     {
         $data = TitikPermohonan::has('payment')->with(['permohonan' => function ($q) {
             $q->with(['user.detail']);
-        }, 'parameters', 'payment'])->whereYear('created_at', $request->tahun)->orderBy('created_at', 'desc')->get();
+        }, 'parameters', 'payment'])->whereYear('created_at', $request->tahun)->whereMonth('created_at', $request->bulan)->orderBy('created_at', 'desc')->get();
 
         $pdf = Pdf::loadview('report.pembayaran-pengujian', compact('data'));
         $pdf->setPaper('A3');
@@ -922,7 +945,11 @@ class ReportController extends Controller
                         $q->where('nama', 'LIKE', '%' . $request->search . '%');
                     });
                 });
-            })->where('status', '>=', 2)->whereBetween('created_at', [Carbon::parse($request->start)->startOfDay(), Carbon::parse($request->end)->endOfDay()])->orderBy('created_at', 'DESC')->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
+            })->where('status', '>=', 2)
+            // ->whereBetween('created_at', [Carbon::parse($request->start)->startOfDay(), Carbon::parse($request->end)->endOfDay()])
+            ->whereYear('created_at', $request->tahun)->whereMonth('created_at', $request->bulan)
+            ->orderBy('created_at', 'DESC')
+            ->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
 
             $data->map(function ($a) {
                 $a->tanggal_diterima = $a->tanggal_diterima ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_diterima)->format('Y-m-d')) : '-';
@@ -939,7 +966,11 @@ class ReportController extends Controller
     {
         $data = TitikPermohonan::with(['permohonan' => function ($q) {
             $q->with(['user']);
-        }])->where('status', '>=', 2)->whereBetween('created_at', [Carbon::parse($request->start)->startOfDay(), Carbon::parse($request->end)->endOfDay()])->orderBy('created_at', 'DESC')->get();
+        }])->where('status', '>=', 2)
+        // ->whereBetween('created_at', [Carbon::parse($request->start)->startOfDay(), Carbon::parse($request->end)->endOfDay()])
+        ->whereYear('created_at', $request->tahun)
+        ->whereMonth('created_at', $request->bulan)
+        ->orderBy('tanggal_diterima', 'ASC')->get();
 
         $data = $data->map(function ($a) {
             $a->tanggal_diterima = $a->tanggal_diterima ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_diterima)->format('Y-m-d')) : '-';

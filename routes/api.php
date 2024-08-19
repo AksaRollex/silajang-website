@@ -406,6 +406,7 @@ Route::prefix('v1')->middleware(['json'])->group(function () {
       Route::prefix('umpan-balik')->middleware(['role:admin'])->group(function () {
         Route::post('', [UmpanBalikController::class, 'index']);
         Route::post('summary', [UmpanBalikController::class, 'summary']);
+        Route::post('reset', [UmpanBalikController::class, 'resetSummary']);
         Route::get('template', [UmpanBalikController::class, 'templateImport']);
         Route::post('import', [UmpanBalikController::class, 'importData']);
 
@@ -510,6 +511,7 @@ Route::prefix('v1')->middleware(['json'])->group(function () {
     Route::prefix('pembayaran')->group(function () {
       Route::prefix('pengujian')->group(function () {
         Route::post('', [PembayaranController::class, 'index']);
+        Route::post('whatsapp', [PembayaranController::class, 'whatsapp']);
         Route::get('{uuid}', [PembayaranController::class, 'show']);
         Route::post('{uuid}', [PembayaranController::class, 'store']);
 

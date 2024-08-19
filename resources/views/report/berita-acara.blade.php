@@ -156,11 +156,24 @@
         <tbody>
             @foreach ($data->parameters as $i => $param)
                 <tr>
-                    @if ($i == 0)
-                        <td rowspan="{{ count($data->parameters) }}">1</td>
-                        <td rowspan="{{ count($data->parameters) }}">{{ $data->lokasi }}</td>
-                        <td rowspan="{{ count($data->parameters) }}">
+                    @if ($i == floor(count($data->parameters) / 2) && $i == count($data->parameters) - 1)
+                        <td style="border-top: none">1</td>
+                        <td style="border-top: none">{{ $data->lokasi }}</td>
+                        <td style="border-top: none">
                             {{ Illuminate\Support\Carbon::parse($data->tanggal_pengambilan)->format('H:i') }}</td>
+                    @elseif ($i == floor(count($data->parameters) / 2))
+                        <td style="border-top: none; border-bottom: none">1</td>
+                        <td style="border-top: none; border-bottom: none">{{ $data->lokasi }}</td>
+                        <td style="border-top: none; border-bottom: none">
+                            {{ Illuminate\Support\Carbon::parse($data->tanggal_pengambilan)->format('H:i') }}</td>
+                    @elseif ($i == count($data->parameters) - 1)
+                        <td style="border-top: none"></td>
+                        <td style="border-top: none"></td>
+                        <td style="border-top: none"></td>
+                    @else
+                        <td style="border-top: none; border-bottom: none"></td>
+                        <td style="border-top: none; border-bottom: none"></td>
+                        <td style="border-top: none; border-bottom: none"></td>
                     @endif
                     <td>{{ $param->nama }}</td>
                     <td>{{ $param->pivot->keterangan }}</td>

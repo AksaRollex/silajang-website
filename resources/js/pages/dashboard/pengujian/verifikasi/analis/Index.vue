@@ -83,7 +83,8 @@ interface TitikPermohonan {
         user: {
             nama: string,
         }
-    }
+    },
+    check_param: string,
 }
 import { createColumnHelper } from "@tanstack/vue-table";
 const column = createColumnHelper<TitikPermohonan>();
@@ -138,6 +139,14 @@ export default defineComponent({
             column.accessor("tanggal_diterima", {
                 header: "Diterima pada",
                 cell: cell => moment(cell.getValue()).format('DD MMMM YYYY - HH:mm')
+            }),
+            column.accessor("check_param", {
+                header: "",
+                cell: (cell) => h('div', { class: 'py-6' }, [
+                    cell.row.original.check_param && h('button', {
+                        class: 'btn btn-sm disabled'
+                    }, [h('i', { class: 'la la-check-circle fs-1 text-success' })])
+                ])
             }),
             column.accessor("uuid", {
                 header: "Aksi",

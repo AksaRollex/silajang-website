@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\TTEHelper;
 use App\Models\TandaTangan;
 use App\Models\TitikPermohonan;
+use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -25,8 +26,9 @@ class TTEController extends Controller {
       mkdir(storage_path('app/private/qrcode'), 0777, true);
     }
 
-    $qrCode = QrCode::size(200)->format('png')->merge("/public/media/logo-jombang.png", .2)->generate(($ttd->nip . ' ' . date('Y-m-d H:i:s')) ?? '', storage_path('app/private/qrcode/' . ($ttd->nip . ' ' . time()) . '.png'));
-    $qrCode = fopen(storage_path('app/private/qrcode/' . ($ttd->nip . ' ' . time()) . '.png'), 'r');
+    $qrname = ($ttd->nip . ' ' . time());
+    $qrCode = QrCode::size(200)->format('png')->merge("/public/media/logo-jombang.png", .2)->generate(($ttd->nip . ' ' . date('Y-m-d H:i:s')) ?? '', storage_path('app/private/qrcode/' . $qrname . '.png'));
+    $qrCode = fopen(storage_path('app/private/qrcode/' . $qrname . '.png'), 'r');
 
     $sertifikat = new ReportController();
 
@@ -75,6 +77,7 @@ class TTEController extends Controller {
         Storage::put('private/lhu/' . $filename, $response);
 
         $data->update(['status_tte' => 1]);
+        $data->update(['tanggal_tte' => Carbon::now()]);
 
         return response($response, 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="' . $filename . '"']);
       }

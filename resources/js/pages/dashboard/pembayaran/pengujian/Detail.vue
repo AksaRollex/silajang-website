@@ -52,7 +52,7 @@
             <template v-else>
                 <div class="row row-gap-8">
                     <div class="col-12" v-if="formData.payment?.status === 'success'">
-                        <div class="bg-success text-white py-1 rounded-1 text-center">Pembayaran berhasil dilakukan</div>
+                        <div class="bg-success text-white py-1 rounded-1 text-center">Pembayaran berhasil dilakukan pada: <strong>{{ moment(formData.payment.tanggal_bayar).format('DD-MM-YYYY') }}</strong></div>
                     </div>
                     <div class="col-12" v-else-if="formData.payment?.is_expired === false">
                         <div class="bg-primary text-white py-1 rounded-1 text-center">Lakukan pembayaran sebelum: <strong>{{

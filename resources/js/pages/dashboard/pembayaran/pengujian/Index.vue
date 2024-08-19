@@ -12,11 +12,14 @@
         <select2 placeholder="Pilih Tahun" class="form-select-solid mw-200px mw-md-100" name="tahun" :options="tahuns"
           v-model="tahun">
         </select2>
+        <select2 placeholder="Pilih Bulan" class="form-select-solid mw-200px mw-md-100" name="bulan" :options="bulans"
+          v-model="bulan">
+        </select2>
       </div>
     </div>
     <div class="card-body">
       <paginate ref="paginate" id="table-konfirmasi" url="/pembayaran/pengujian" :columns="columns"
-        queryKey="pengujian-0" :payload="{ tahun: tahun }">
+        queryKey="pengujian-0" :payload="{ tahun, bulan }">
       </paginate>
     </div>
   </div>
@@ -132,6 +135,7 @@ interface TitikPermohonan {
     id: number,
     is_expired: boolean,
     status: string,
+    tanggal_bayar: string,
   },
 }
 import { createColumnHelper } from "@tanstack/vue-table";
@@ -161,6 +165,22 @@ export default defineComponent({
       tahuns.value.push({ id: i, text: i });
     }
 
+    const bulan = ref(new Date().getMonth() + 1)
+    const bulans = ref<any[]>([
+      { id: 1, text: "Januari" },
+      { id: 2, text: "Februari" },
+      { id: 3, text: "Maret" },
+      { id: 4, text: "April" },
+      { id: 5, text: "Mei" },
+      { id: 6, text: "Juni" },
+      { id: 7, text: "Juli" },
+      { id: 8, text: "Agustus" },
+      { id: 9, text: "September" },
+      { id: 10, text: "Oktober" },
+      { id: 11, text: "November" },
+      { id: 12, text: "Desember" },
+    ])
+
     const { download: downloadReport } = useDownloadPdf({
       onSuccess: () => {
         paginate.value.refetch()
@@ -171,6 +191,10 @@ export default defineComponent({
         })
       }
     });
+
+    const sentWa = (uuid) => {
+      return axios.post(`/pembayaran/pengujian/whatsapp?uuid=${uuid}`)
+    }
 
     const columns = [
       column.accessor("no", {
@@ -200,6 +224,9 @@ export default defineComponent({
         cell: cell => h('div', [
           cell.row.original.payment?.is_expired ? h('span', { class: `badge badge-light-danger` }, 'Kedaluwarsa') : h('span', { class: `badge badge-light-${cell.getValue()?.status == 'pending' ? 'info' : (cell.getValue()?.status == 'success' ? 'success' : 'danger')}` }, cell.row.original.text_status_pembayaran)
         ])
+      }),
+      column.accessor("payment.tanggal_bayar", {
+        header: "Tanggal Bayar",
       }),
       column.accessor("uuid", {
         header: "Aksi",
@@ -350,8 +377,15 @@ export default defineComponent({
                   h('span', { class: 'd-none d-md-inline' }, 'Kwitansi')
                 ]),
               ]),
-            ])
-          ])
+            ]),
+          ]),
+          cell.row.original.text_status_pembayaran == 'Belum Dibayar' && h('button', { 
+            class: 'btn btn-sm btn-icon btn-success', onClick: () => {
+              selected.value = cell.getValue()
+              sentWa(selected.value)
+            }},
+            h('i', { class: 'fa-brands fa-whatsapp' })
+          )
         ])
       }),
     ]
@@ -370,6 +404,8 @@ export default defineComponent({
       paginate,
       tahun,
       tahuns,
+      bulan,
+      bulans,
       reportUrl,
       block, unblock,
       downloadReport,
@@ -386,7 +422,7 @@ export default defineComponent({
     massReport() {
       if (this.previewReport) {
         block('#modal-report .modal-body')
-        this.reportUrl = `/api/v1/report/pembayaran/pengujian?tahun=${this.tahun}&token=${localStorage.getItem('auth_token')}`
+        this.reportUrl = `/api/v1/report/pembayaran/pengujian?tahun=${this.tahun}&bulan=${this.bulan}&token=${localStorage.getItem('auth_token')}`
         $('#modal-report').modal('show')
       } else {
         this.downloadReport(`/report/pembayaran/pengujian?tahun=${this.tahun}`)

@@ -37,7 +37,7 @@
                     </div>
                     <!--end::Input group-->
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <!--begin::Input group-->
                     <div class="fv-row mb-7">
                         <label class="form-label fw-bold text-dark fs-6 required">Alamat Industri</label>
@@ -193,12 +193,12 @@
                 </div>
             </div>
 
-            <div class="border border-bottom border-gray mt-8 mb-12"></div>
+            <!-- <div class="border border-bottom border-gray mt-8 mb-12"></div> -->
 
-            <div class="row">
-                <div class="col-md-6">
+            <!-- <div class="row">
+                <div class="col-md-6"> -->
                     <!--begin::Input group-->
-                    <div class="fv-row mb-7">
+                    <!-- <div class="fv-row mb-7">
                         <label class="form-label fw-bold text-dark fs-6">Keterangan</label>
                         <Field name="keterangan" autocomplete="off" v-model="formData.keterangan">
                             <textarea class="form-control form-control-lg form-control-solid" name="keterangan" rows="3"
@@ -209,10 +209,10 @@
                                 <ErrorMessage name="keterangan" />
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     <!--end::Input group-->
-                </div>
-            </div>
+                <!-- </div>
+            </div> -->
         </div>
         <div class="card-footer d-flex">
             <button type="submit" class="btn btn-primary btn-sm ms-auto">

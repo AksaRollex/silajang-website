@@ -67,9 +67,10 @@
                                     </div>
                                     <div class="col-6">
                                         <div class="text-muted mb-2 required">Baku Mutu</div>
-                                        <Field class="form-control form-control-lg form-control-solid" type="text"
+                                        <Field v-if="formData.baku_mutu" class="form-control form-control-lg form-control-solid" type="text"
                                             :disabled="formData.status < 5" autocomplete="off"
                                             v-model="param.pivot.baku_mutu" required placeholder="Baku Mutu" />
+                                        <Field v-else class="form-control form-control-lg form-control-solid" type="text" value="-" readonly />
                                     </div>
                                     <div class="col-6">
                                         <div class="text-muted mb-2">MDL</div>
@@ -166,6 +167,7 @@ interface FormData {
     },
     is_has_subkontrak: boolean | number;
     lab_subkontrak: string;
+    baku_mutu: boolean | number;
     hasil_pengujian: boolean | number;
     memenuhi_hasil_pengujian: boolean | number;
     kesimpulan_permohonan: boolean | number;

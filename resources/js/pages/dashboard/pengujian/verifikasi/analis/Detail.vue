@@ -38,7 +38,8 @@
                                     </div>
                                     <div class="col-6">
                                         <div class="text-muted">Baku Mutu</div>
-                                        <div class="fw-bolder">{{ param.pivot.baku_mutu ?? '-' }}</div>
+                                        <div class="fw-bolder" v-if="formData.baku_mutu">{{ param.pivot.baku_mutu ?? '-' }}</div>
+                                        <div class="fw-bolder" v-else>-</div>
                                     </div>
                                     <div class="col-6">
                                         <div class="text-muted">MDL</div>
@@ -106,6 +107,7 @@ interface FormData {
     },
     is_has_subkontrak: boolean | number;
     lab_subkontrak: string;
+    baku_mutu: boolean | number;
     hasil_pengujian: boolean | number;
     kesimpulan_permohonan: boolean | number;
     kesimpulan_sampel: boolean | number;

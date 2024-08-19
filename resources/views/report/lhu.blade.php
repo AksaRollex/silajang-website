@@ -74,6 +74,15 @@
         opacity: 0.25;
         width: 80%;
     }
+    #watermark-lhu{
+        position: fixed;
+        top: 50%;
+        left: 52.2%;
+        z-index: 10;
+        transform: translate(-55%, -55%);
+        opacity: 0.7;
+        width: 105%;
+    }
 
     .italic * {
         font-style: italic;
@@ -91,7 +100,7 @@
 
     footer.tte {
         position: fixed;
-        bottom: -1rem;
+        bottom: 0.5rem;
         left: 0px;
         right: 0px;
         text-align: center;
@@ -106,6 +115,7 @@
 </style>
 
 <body>
+    <img src="{{ storage_path('app/watermark-lhu.jpeg') }}" id="watermark-lhu" alt="">
     @if (isset($preview) && $preview)
         <img src="{{ public_path('media/watermark-preview.png') }}" id="watermark" alt="">
     @endif
@@ -119,18 +129,22 @@
         </div>
     @endif
 
-    @if (isset($tte) && $tte)
-        <footer class="tte" style="padding: 0.5rem; text-align: left; margin-top: 1rem">
-            <img src="{{ public_path('media/bse.png') }}" width="100" style="margin-bottom: -1rem">
-            <div style="text-align: center">
-                <em style="font-family: Arial, Helvetica, sans-serif; font-size: 0.7rem">Dokumen ini telah
-                    ditandatangani
-                    secara elektronik
-                    yang diterbitkan oleh Balai Sertifikasi
-                    Elektronik(BSrE), BSSN</em>
-            </div>
-        </footer>
-    @endif
+    <footer class="tte" style="padding: 0.5rem; text-align: left; margin-top: 1rem">
+        @if (isset($tte) && $tte)
+        <img src="{{ public_path('media/bse.png') }}" width="75" style="position: absolute; left: 0">
+        @endif
+        <div style="text-align: center">
+            <em style="font-family: Arial, Helvetica, sans-serif; font-size: 0.7rem">Sertifikat pengujian ini hanya berlaku untuk jenis dan kode contoh uji yang tertera serta tidak boleh digandakan kecuali seluruhnya tanpa persetujuan dari laboratorium</em>
+            <br>
+            @if (isset($tte) && $tte)
+            <em style="font-family: Arial, Helvetica, sans-serif; font-size: 0.7rem">Dokumen ini telah
+                ditandatangani
+                secara elektronik
+                yang diterbitkan oleh Balai Sertifikasi
+                Elektronik(BSrE), BSSN</em>
+            @endif
+        </div>
+    </footer>
 
     <table style="page-break-inside: auto" cellspacing="0" cellpadding="0">
         <thead>
@@ -176,6 +190,12 @@
             <tr>
                 <td colspan="8">
                     <table border="0" cellpadding="1" cellspacing="0">
+                        <tr style="text-align: center">
+                            <td colspan="8" style="text-decoration: underline; font-weight: 700">LAPORAN HASIL PENGUJIAN</td>
+                        </tr>
+                        <tr style="text-align: center">
+                            <td colspan="8">{{ $data->no_lhu }}</td>
+                        </tr>
                         <tr style="font-weight:500;">
                             <td>I.</td>
                             <td colspan="3">UMUM</td>
@@ -350,7 +370,11 @@
                             {{ !$param->is_dapat_diuji ? '***' : '' }}</td>
                         <td>{{ $param->pivot->satuan }}</td>
                         <td>{{ $param->pivot->hasil_uji_pembulatan }}</td>
-                        <td>{{ $param->pivot->baku_mutu }}</td>
+                        @if ($data->baku_mutu)
+                            <td>{{ $param->pivot->baku_mutu }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
                         <td>{{ $param->metode }}</td>
                         {{-- <td>{{ App\Models\TitikPermohonanParameter::getHasil($param->pivot) }}</td> --}}
                         <td></td>
@@ -508,6 +532,7 @@
                 </td>
             </tr>
             @if (!$data->permohonan->is_mandiri)
+                @if ($data->hasil_pengujian)
                 <tr>
                     <td colspan="8">
                         <table cellpadding="1" cellspacing="0">
@@ -519,34 +544,31 @@
                                     <h4 style="margin: 0">INTERPRETASI HASIL PENGUJIAN</h4>
                                 </td>
                                 <td style="vertical-align: top; width: 20px">:</td>
-                                @if ($data->hasil_pengujian)
-                                    @if (isset($data->peraturan))
-                                        @if ($data->check())
-                                            <td>
-                                                Hasil Analisa Telah Memenuhi sesuai Baku Mutu
-                                                {{ $data->peraturan->nama }}
-                                                {{ $data->peraturan->nomor }}
-                                            </td>
-                                        @else
-                                            <td>
-                                                Hasil Analisa Tidak Memenuhi Baku Mutu {{ $data->peraturan->nama }}
-                                                {{ $data->peraturan->nomor }}
-                                            </td>
-                                        @endif
+                                @if (isset($data->peraturan))
+                                    @if ($data->check())
+                                        <td>
+                                            Hasil Analisa Telah Memenuhi sesuai Baku Mutu
+                                            {{ $data->peraturan->nama }}
+                                            {{ $data->peraturan->nomor }}
+                                        </td>
                                     @else
-                                        @if ($data->check())
-                                            <td>Hasil Analisa Telah Memenuhi sesuai Baku Mutu</td>
-                                        @else
-                                            <td>Hasil Analisa Tidak Memenuhi Baku Mutu</td>
-                                        @endif
+                                        <td>
+                                            Hasil Analisa Tidak Memenuhi Baku Mutu {{ $data->peraturan->nama }}
+                                            {{ $data->peraturan->nomor }}
+                                        </td>
                                     @endif
                                 @else
-                                    <span>-</span>
+                                    @if ($data->check())
+                                        <td>Hasil Analisa Telah Memenuhi sesuai Baku Mutu</td>
+                                    @else
+                                        <td>Hasil Analisa Tidak Memenuhi Baku Mutu</td>
+                                    @endif
                                 @endif
                             </tr>
                         </table>
                     </td>
                 </tr>
+                @endif
 
                 <tr>
                     <td colspan="8">

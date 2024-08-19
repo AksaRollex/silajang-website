@@ -389,6 +389,15 @@
             </td>
         </tr>
     </table>
+
+    @if ($data->keterangan !== null)
+    <table style="margin-top: 1rem">
+        <tr>
+            <td>Keterangan :</td>
+            <td>{{ $data->keterangan }}</td>
+        </tr>
+    </table>
+    @endif
 </body>
 
 </html>

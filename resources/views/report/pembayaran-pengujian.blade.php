@@ -99,7 +99,8 @@
             <th style="text-align: center">Harga</th>
             <th style="text-align: center">Status Pembayaran</th>
             <th style="text-align: center">Virtual Account</th>
-            <th style="text-align: center">Tanggal Kedalwarsa</th>
+            <th style="text-align: center">Tanggal Kedaluwarsa</th>
+            <th style="text-align: center">Tanggal Pembayaran</th>
         </tr>
 
         @foreach ($data as $i => $item)
@@ -116,6 +117,7 @@
                 @endif
                 <td>{{ @$item->payment->va_number }}</td>
                 <td>{{ $item->payment ? App\Helpers\AppHelper::tanggal_indo($item->payment->tanggal_exp) : '' }}</td>
+                <td>{{ $item->payment->tanggal_bayar ? App\Helpers\AppHelper::tanggal_indo($item->payment->tanggal_bayar) : '-' }}</td>
             </tr>
         @endforeach
     </table>

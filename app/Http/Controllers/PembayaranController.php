@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\TitikPermohonan;
 use App\Models\TrackingPengujian;
 use App\Services\BankJatim;
+use App\Services\WhatsApp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -54,8 +55,11 @@ class PembayaranController extends Controller // Pembayaran utk Pengujian
         $q->whereHas('user', function ($q) {
           $q->where('golongan_id', 1);
         });
-      })->whereYear('created_at', $request->tahun)->orderBy('kode', 'desc')->paginate($per, ['titik_permohonans.*', DB::raw('@no := @no + 1 AS no')]);
+      })->whereYear('created_at', $request->tahun)->whereMonth('created_at', $request->bulan)->orderBy('kode', 'desc')->paginate($per, ['titik_permohonans.*', DB::raw('@no := @no + 1 AS no')]);
 
+      $data->map(function ($a) {
+        $a->payment->tanggal_bayar = $a->payment->tanggal_bayar ? AppHelper::tanggal_indo(Carbon::parse($a->payment->tanggal_bayar)->format('Y-m-d')) : '-';
+      });
       return response()->json($data);
     } else {
       return abort(404);
@@ -203,5 +207,22 @@ class PembayaranController extends Controller // Pembayaran utk Pengujian
     return response()->json([
       'message' => 'Pembayaran belum lunas.',
     ], 400);
+  }
+
+  public function whatsapp(Request $request) {
+    $uuid = $request->query('uuid');
+    $data = TitikPermohonan::with('permohonan.user', 'payment')->where('uuid', $uuid)->first();
+
+    $payment = $data->payment;
+    $formattedDate = AppHelper::tanggal_indo(Carbon::parse($payment['tanggal_exp'])->format('Y-m-d'));
+    $formattedPrice = AppHelper::rupiah($payment['jumlah']);
+
+    $phone = $data->permohonan->user->phone;
+    $wa = new WhatsApp($phone);
+    $wa->send('Kepada pelanggan ' . $payment['nama'] . ' yang terhormat. ' . "\n\n" . 'Silahkan melakukan pembayaran sebesar ' . '*' . $formattedPrice . '*' . ', sebelum tanggal ' . '*' . $formattedDate . '*' . ' ke nomor Virtual Account berikut ' . '*' . $payment['va_number'] . '*' . '.');
+
+    return response()->json([
+      'data' => $data
+    ]);
   }
 }

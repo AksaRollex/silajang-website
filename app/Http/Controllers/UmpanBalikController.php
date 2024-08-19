@@ -68,6 +68,22 @@ class UmpanBalikController extends Controller
         ]);
     }
 
+    public function resetSummary(Request $request){
+        $data = UmpanBalik::where('tahun', $request->tahun)->where('bulan', $request->bulan);
+
+        $data->delete();
+        
+        $total = 0;
+        $ikm = 0;
+        
+        return response()->json([
+            'data' => $data,
+            'total' => $total,
+            'ikm' => $ikm,
+            'keterangan' => KeteranganUmpanBalik::get()
+        ]);
+    }
+
     public function templateImport()
     {
         $spreadsheet = new Spreadsheet();

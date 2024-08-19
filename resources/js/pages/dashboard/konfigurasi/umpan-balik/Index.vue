@@ -13,7 +13,11 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="d-flex justify-content-end mb-4">
+                <div class="d-flex justify-content-end mb-4 gap-5">
+                    <button class="btn btn-light-warning btn-sm" @click="reset">
+                        <i class="la la-refresh fs-2"></i>
+                        Reset Data
+                    </button>
                     <button class="btn btn-light-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modal-import">
                         <i class="la la-file-upload fs-2"></i>
                         Import Data
@@ -227,6 +231,7 @@ interface FormData {
 
 import { createColumnHelper } from "@tanstack/vue-table";
 import { toast } from 'vue3-toastify';
+import Swal from 'sweetalert2';
 const column = createColumnHelper<KeteranganUmpanBalik>();
 
 export default defineComponent({
@@ -317,6 +322,41 @@ export default defineComponent({
                 this.data = res.data
             }).finally(() => {
                 unblock(this.$el)
+            })
+        },
+        reset() {
+            Swal.fire({
+                icon: 'warning',
+                text: 'Apakah Anda yakin ingin mereset data tersebut?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Reset',
+                cancelButtonText: 'Batal',
+                buttonStyling: false,
+                reverseButtons: true,
+                customClass: {
+                    confirmButton: "btn btn-danger btn-sm",
+                    cancelButton: "btn btn-secondary btn-sm",
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    return axios.post('/konfigurasi/umpan-balik/reset', {
+                        tahun: this.tahun,
+                        bulan: this.bulan
+                    }).then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            text: 'Data berhasil direset',
+                        }).then((res) => {
+                            this.getData();
+                        })
+                    })
+                }
+            }).catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    text: err.response?.data?.message || "error",
+                    confirmButtonText: 'Ok' 
+                })
             })
         },
         saveUmpanBalik() {

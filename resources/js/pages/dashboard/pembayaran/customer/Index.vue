@@ -8,11 +8,14 @@
                 <select2 placeholder="Pilih Tahun" class="form-select-solid mw-200px mw-md-100" name="tahun"
                     :options="tahuns" v-model="tahun">
                 </select2>
+                <select2 placeholder="Pilih Bulan" class="form-select-solid mw-200px mw-md-100" name="bulan"
+                    :options="bulans" v-model="bulan">
+                </select2>
             </div>
         </div>
         <div class="card-body">
             <paginate ref="paginate" id="table-konfirmasi" url="/pembayaran/pengujian" :columns="columns"
-                queryKey="pengujian-0" :payload="{ tahun: tahun }">
+                queryKey="pengujian-0" :payload="{ tahun, bulan }">
             </paginate>
         </div>
     </div>
@@ -81,7 +84,10 @@ interface TitikPermohonan {
         id: number,
         is_expired: boolean,
         status: string,
+        is_lunas: boolean,
     },
+    status_tte_skrd: boolean,
+    status_tte_kwitansi: boolean,
 }
 import { createColumnHelper } from "@tanstack/vue-table";
 import { currency } from '@/libs/utils';
@@ -102,6 +108,22 @@ export default defineComponent({
         for (let i = tahun.value; i >= 2022; i--) {
             tahuns.value.push({ id: i, text: i });
         }
+
+        const bulan = ref(new Date().getMonth() + 1);
+        const bulans = ref<any[]>([
+            { id: 1, text: "Januari" },
+            { id: 2, text: "Februari" },
+            { id: 3, text: "Maret" },
+            { id: 4, text: "April" },
+            { id: 5, text: "Mei" },
+            { id: 6, text: "Juni" },
+            { id: 7, text: "Juli" },
+            { id: 8, text: "Agustus" },
+            { id: 9, text: "September" },
+            { id: 10, text: "Oktober" },
+            { id: 11, text: "November" },
+            { id: 12, text: "Desember" },
+        ])
 
         const { previewReport } = usePreviewReport()
         const reportUrl = ref<string>("");
@@ -137,11 +159,11 @@ export default defineComponent({
                 header: "Aksi",
                 cell: (cell) => h('div', { class: 'd-flex gap-2 flex-wrap' }, [
                     h('button', {
-                        class: `btn btn-sm ${cell.row.original.payment.status === 'success' ? 'btn-light-primary' : 'btn-primary'} d-flex`, onClick: () => {
+                        class: `btn btn-sm ${cell.row.original.payment?.status === 'success' ? 'btn-light-primary' : 'btn-primary'} d-flex`, onClick: () => {
                             selected.value = cell.getValue();
                             openDetail.value = true;
                         }
-                    }, [h('i', { class: 'la la-credit-card fs-2' }), cell.row.original.payment.status === 'success' ? ' Detail' : ' Pembayaran']),
+                    }, [h('i', { class: 'la la-credit-card fs-2' }), cell.row.original.payment?.status === 'success' ? ' Detail' : ' Pembayaran']),
                     (cell.row.original.status >= 9 || cell.row.original.payment?.status === 'success') && h('button', {
                         class: 'btn btn-sm btn-danger d-flex', onClick: () => {
                             if (previewReport.value) {
@@ -172,6 +194,56 @@ export default defineComponent({
                             whiteSpace: 'nowrap'
                         }
                     }, [h('i', { class: 'la la-file-pdf fs-2' }), ' Tagihan']),
+                    (cell.row.original.status_tte_skrd == 1 || cell.row.original.status_tte_kwitansi == 1) && h('div', { class: 'dropup' }, [
+                        h('button', {
+                        class: 'btn btn-sm btn btn-light-danger',
+                        'data-bs-toggle': 'dropdown',
+                        }, [
+                        h('i', { class: 'la la-file-pdf me-0 fs-2' }),
+                        h('span', { class: 'd-none d-md-inline me-2' }, 'PDF'),
+                        h('i', { class: 'la la-angle-down me-0 fs-2' }),
+                        ]),
+                        h('div', {
+                        class: 'dropdown-menu',
+                        }, [
+                        cell.row.original.status_tte_skrd == 1 && h('div', { class: 'dropdown-item px-3' }, [
+                            h('button', {
+                            class: 'btn btn-sm w-100 text-start btn-light-primary', onClick: () => {
+                                if (previewReport.value) {
+                                block('#modal-report .modal-body')
+                                reportUrl.value = `/api/v1/report/${cell.getValue()}/skrd?token=${localStorage.getItem('auth_token')}`
+
+                                iframeReport.value.contentWindow.location.reload()
+                                $('#modal-report').modal('show')
+                                } else {
+                                downloadReport(`/report/${cell.getValue()}/skrd`)
+                                }
+                            }
+                            }, [
+                            h('i', { class: 'la la-file-pdf fs-2' }),
+                            h('span', { class: 'd-none d-md-inline' }, 'SKRD')
+                            ]),
+                        ]),
+                        cell.row.original.status_tte_kwitansi == 1 && cell.row.original.payment?.is_lunas == 1 && h('div', { class: 'dropdown-item px-3' }, [
+                            h('button', {
+                            class: 'btn btn-sm w-100 text-start btn-light-warning', onClick: () => {
+                                if (previewReport.value) {
+                                block('#modal-report .modal-body')
+                                reportUrl.value = `/api/v1/report/${cell.getValue()}/kwitansi?token=${localStorage.getItem('auth_token')}`
+
+                                iframeReport.value.contentWindow.location.reload()
+                                $('#modal-report').modal('show')
+                                } else {
+                                downloadReport(`/report/${cell.getValue()}/kwitansi`)
+                                }
+                            }
+                            }, [
+                            h('i', { class: 'la la-file-pdf fs-2' }),
+                            h('span', { class: 'd-none d-md-inline' }, 'Kwitansi')
+                            ]),
+                        ]),
+                    ])
+                ])
                 ])
             }),
         ]
@@ -183,6 +255,8 @@ export default defineComponent({
             paginate,
             tahun,
             tahuns,
+            bulan,
+            bulans,
             reportUrl,
             block, unblock,
             downloadReport,

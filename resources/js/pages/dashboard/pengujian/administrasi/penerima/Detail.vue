@@ -380,6 +380,32 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="fv-row mb-10">
+                                        <label class="form-label fs-6">Baku Mutu</label>
+                                        <div class="d-flex align-items-center gap-4">
+                                            <div class="form-check form-check-custom form-check-solid">
+                                                <input class="form-check-input" type="radio" value="1"
+                                                    name="baku_mutu" id="baku_mutu-1"
+                                                    v-model="formData.baku_mutu" @change="change()" />
+                                                <label class="form-check-label" for="baku_mutu-1">
+                                                    Ada
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-custom form-check-solid">
+                                                <input class="form-check-input" type="radio" value="0"
+                                                    name="baku_mutu" id="baku_mutu-0"
+                                                    v-model="formData.baku_mutu" @change="change()" />
+                                                <label class="form-check-label" for="baku_mutu-0">
+                                                    Tidak Ada
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="fv-plugins-message-container">
+                                            <div class="fv-help-block">
+                                                <ErrorMessage name="baku_mutu" /> 
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="fv-row mb-10">
@@ -982,6 +1008,7 @@ interface FormData {
     },
     is_has_subkontrak: boolean | number;
     lab_subkontrak: string;
+    baku_mutu: boolean | number;
     hasil_pengujian: boolean | number;
     kesimpulan_permohonan: boolean | number;
     kesimpulan_sampel: boolean | number;

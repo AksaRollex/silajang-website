@@ -71,6 +71,7 @@ class PenerimaSampelController extends Controller
             'kondisi_sampel',
             'keterangan_kondisi_sampel',
             'pengawetan_oleh',
+            'baku_mutu',
             'hasil_pengujian',
             'memenuhi_hasil_pengujian',
             'tanggal_diterima'
@@ -119,7 +120,7 @@ class PenerimaSampelController extends Controller
 
             $date = date('Y-m-d H:i:s');
             $MyDateCarbon = Carbon::parse($date);
-            $addDays = 14;
+            $addDays = 10;
 
             $MyDateCarbon->addWeekdays($addDays);
 

@@ -5,6 +5,10 @@
                 v-model="tahun">
             </select2>
         </div>
+        <div v-if="user.has_tagihan" class="alert alert-warning text-center p-10">
+            <h6 class="text-dark mb-0">Tidak dapat membuat Permohonan Baru</h6>
+            <span class="text-dark fs-8">Harap selesaikan tagihan pembayaran Anda terlebih dahulu.</span>
+        </div>
         <div class="card mb-10">
             <!--begin::Heading-->
             <div
