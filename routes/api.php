@@ -49,6 +49,7 @@ use App\Http\Controllers\TTEController;
 use App\Http\Controllers\UmpanBalikController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserParameterController;
+use App\Http\Controllers\KontrakController;
 
 /*
 |--------------------------------------------------------------------------
@@ -468,6 +469,12 @@ Route::prefix('v1')->middleware(['json'])->group(function () {
     });
 
     Route::prefix('administrasi')->group(function () {
+      Route::prefix('kontrak')->middleware(['role:admin'])->group(function () {
+        Route::post('', [KontrakController::class, 'index']);
+        Route::get('{uuid}', [KontrakController::class, 'show']);
+        Route::post('{uuid}/update', [KontrakController::class, 'update']);
+      });
+
       Route::prefix('pengambil-sample')->middleware(['role:admin|pengambil-sample|koordinator-administrasi'])->group(function () {
         Route::post('', [PengambilSampelController::class, 'index']);
         Route::get('petugas', [PengambilSampelController::class, 'petugas']);

@@ -437,7 +437,7 @@ export default defineComponent({
             lokasi: Yup.string().required('Lokasi harus diisi'),
             jenis_sampel_id: Yup.number().required('Jenis sampel harus diisi'),
             // jenis_wadah_id: Yup.number().required('Jenis wadah harus diisi'),
-            jenis_wadahs_id: Yup.array().min(1, 'Jenis wadah harus diisi'),
+            jenis_wadahs_id: Yup.array().required('Jenis wadah harus diisi'),
             ...(props.permohonan.is_mandiri && {
                 nama_pengambil: Yup.string().required('Nama petugas harus diisi'),
                 tanggal_pengambilan: Yup.string().required('Tanggal/jam pengiriman harus diisi'),

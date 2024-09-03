@@ -34,6 +34,11 @@ const MainMenuConfig: Array<MenuItem> = [
         name: "administrasi",
         sub: [
           {
+            heading: "Kontrak",
+            name: "kontrak",
+            route: "/dashboard/administrasi/kontrak",
+          },
+          {
             heading: "Persetujuan",
             name: "persetujuan",
             route: "/dashboard/administrasi/persetujuan",

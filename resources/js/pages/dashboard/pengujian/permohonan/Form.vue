@@ -1,5 +1,5 @@
 <template>
-    <VForm class="card mb-10" @submit="submit" :validation-schema="formSchema">
+    <VForm class="card mb-10" @submit="submit" :validation-schema="formSchema" id="form">
         <div class="card-header align-items-center">
             <h2 class="mb-0">{{ selected ? 'Edit' : 'Tambah' }} Permohonan</h2>
             <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="$emit('close')">
@@ -193,7 +193,76 @@
                 </div>
             </div>
 
-            <!-- <div class="border border-bottom border-gray mt-8 mb-12"></div> -->
+            <div v-if="formData.is_mandiri == 0" class="separator separator-content my-10 fw-bold text-dark fs-3" style="white-space: nowrap;">Detail Kontrak</div>
+
+            <div v-if="formData.is_mandiri == 0" class="row">
+                <div class="col-md-6">
+                    <!-- begin::Input group -->
+                    <div class="fv-row mb-7">
+                        <label class="form-label fw-bold text-dark fs-6 required">Nomor Surat</label>
+                        <Field class="form-control form-control-lg form-control-solid" type="text" name="nomor_surat"
+                            autocomplete="off" v-model="formData.kontrak.nomor_surat" />
+                        <div class="fv-plugins-message-container">
+                            <div class="fv-help-block">
+                                <ErrorMessage name="nomor_surat" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end::Input group -->
+                        <!-- begin::Input group -->
+                    <div class="fv-row mb-7">
+                        <label class="form-label fw-bold text-dark fs-6 required">Tanggal Surat</label>
+                        <Field type="hidden" name="tanggal_surat" autocomplete="off" v-model="formData.kontrak.tanggal_surat">
+                            <date-picker v-model="formData.kontrak.tanggal_surat" name="tanggal_surat" placeholder="Pilih Tanggal"></date-picker>
+                        </Field>
+                        <div class="fv-plugins-message-container">
+                            <div class="fv-help-block">
+                                <ErrorMessage name="tanggal_surat" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end::Input group -->
+                    <!-- begin::Input group -->
+                    <div class="fv-row mb-7">
+                        <label class="form-label fw-bold text-dark fs-6 required">Bulan</label>
+                        <Field v-model="formData.kontrak.bulan" name="bulan[]">
+                            <select2 placeholder="Pilih Bulan" class="form-select-solid" name="bulan[]"
+                                multiple :settings="{ allowClear:true, multiple: true }" :options="bulanBerjalan"
+                                v-model="formData.kontrak.bulan">
+                            </select2>
+                        </Field>
+                        <div class="fv-plugins-message-container">
+                            <div class="fv-help-block">
+                                <ErrorMessage name="bulan" />
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end::Input group -->
+                    <!-- begin::Input group -->
+                    <div class="fv-row mb-7">
+                        <label class="form-label fw-bold text-dark fs-6 required">Perihal</label>
+                        <Field name="perihal" autocomplete="off" v-model="formData.kontrak.perihal">
+                            <textarea class="form-control form-control-lg form-control-solid" name="perihal" rows="4"
+                                v-model="formData.kontrak.perihal"></textarea>
+                        </Field>
+                        <div class="fv-plugins-message-container">
+                            <div class="fv-help-block">
+                                <ErrorMessage name="perihal"/>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end::Input group -->
+                </div>
+                <div class="col-md-6">
+                    <!-- begin::Input group -->
+                    <div class="fv-row mb-7">
+                        <label class="form-label fw-bold text-dark fs-6 required">Dokumen Permohonan</label>
+                        <file-upload v-bind:files="dokumen_permohonan" :accepted-file-types="fileTypes"
+                            v-on:updatefiles="onUpdateFiles"></file-upload>
+                    </div>
+                    <!-- end::Input group -->
+                </div>
+            </div>
 
             <!-- <div class="row">
                 <div class="col-md-6"> -->
@@ -240,6 +309,14 @@ interface FormData {
     pembayaran: string;
     is_mandiri: boolean | number;
     jasa_pengambilan_id?: number;
+
+    kontrak: {
+        nomor_surat: string,
+        dokumen_permohonan: string,
+        perihal: string,
+        tanggal_surat: string,
+        bulan: Array<string | number>,
+    }
 }
 
 export default defineComponent({
@@ -253,9 +330,36 @@ export default defineComponent({
     setup(props) {
         const { user } = useAuthStore()
         const formData = ref<FormData>({
-            pembayaran: 'transfer'
+            pembayaran: 'transfer',
+            kontrak: {}
         } as FormData)
         const router = useRouter()
+        const dokumen_permohonan = ref<Array<File | String>>([])
+        const fileTypes = (['application/pdf'])
+        const onUpdateFiles = (newFiles: Array<File | String>) => {
+            dokumen_permohonan.value = newFiles
+        }
+
+        const bulan = ref(new Date().getMonth() + 1);
+        const bulans = ref<any[]>([
+            { id: 1, text: "Januari" },
+            { id: 2, text: "Februari" },
+            { id: 3, text: "Maret" },
+            { id: 4, text: "April" },
+            { id: 5, text: "Mei" },
+            { id: 6, text: "Juni" },
+            { id: 7, text: "Juli" },
+            { id: 8, text: "Agustus" },
+            { id: 9, text: "September" },
+            { id: 10, text: "Oktober" },
+            { id: 11, text: "November" },
+            { id: 12, text: "Desember" },
+        ])
+
+        const bulanBerjalan = ref<any[]>([])
+        for (let i = bulan.value; i <= 12; i++) {
+            bulanBerjalan.value.push({ id: i, text: bulans.value[i - 1].text });
+        }
 
         const formSchema = Yup.object().shape({
             industri: Yup.string().required('Nama Industri harus diisi'),
@@ -267,7 +371,13 @@ export default defineComponent({
                 jasa_pengambilan_id: Yup.string().when('is_mandiri', function (is_mandiri: any) {
                     return is_mandiri == 0 ? Yup.string().required('Wilayah Pengambilan harus diisi') : Yup.string()
                 }),
-            })
+                nomor_surat: Yup.string().when('is_mandiri', function (is_mandiri: any){
+                    return is_mandiri == 0 ? Yup.string().required('Nomor Surat harus diisi') : Yup.string()
+                }),
+                perihal: Yup.string().when('is_mandiri', function (is_mandiri: any){
+                    return is_mandiri == 0 ? Yup.string().required('Perihal harus diisi') : Yup.string()
+                }),
+            }),
         })
 
         const jasaPengambilan = useJasaPengambilan()
@@ -281,7 +391,13 @@ export default defineComponent({
             formData,
             formSchema,
             jasaPengambilans,
-            router
+            router,
+            dokumen_permohonan,
+            fileTypes,
+            onUpdateFiles,
+            bulan,
+            bulans,
+            bulanBerjalan,
         }
     },
     methods: {
@@ -291,6 +407,9 @@ export default defineComponent({
             axios.get(`/permohonan/${this.selected}/edit`)
                 .then(res => {
                     this.formData = res.data.data
+                    this.dokumen_permohonan = res.data.data.kontrak.dokumen_permohonan
+                    ? ["/storage/" + res.data.data.kontrak.dokumen_permohonan]
+                    : [];
                 })
                 .catch(err => {
                     toast.error(err.response.data.message)
@@ -300,17 +419,32 @@ export default defineComponent({
                 })
         },
         submit() {
+            if (!this.dokumen_permohonan[0] && this.formData.is_mandiri == 0) {
+                toast.error('File tidak boleh kosong')
+            }
+
             block(this.$el)
 
-            axios.post(this.selected ? `/permohonan/${this.selected}/update` : '/permohonan/store', this.formData)
-                .then((res) => {
-                    toast.success('Data berhasil disimpan')
+            const formData = new FormData(document.querySelector('#form'))
+            if (this.formData.is_mandiri == 0) {
+                formData.append('dokumen_permohonan', this.dokumen_permohonan[0].file as File)
+            }
 
+            axios.post(this.selected ? `/permohonan/${this.selected}/update` : '/permohonan/store', formData)
+                .then((res) => {
                     if (this.$props.selected) {
                         this.$emit('close')
                         this.$emit('refresh')
+                        toast.success('Data berhasil disimpan')
                     } else {
-                        this.router.push(`/dashboard/pengujian/permohonan/${res.data.data.uuid}`)
+                        this.$emit('close')
+                        this.$emit('refresh')
+                        if (this.formData.is_mandiri == 0) {
+                            toast.success('Silahkan menunggu konfirmasi dari admin')
+                        } else {
+                            toast.success('Data berhasil disimpan')
+                        }
+                        // this.router.push(`/dashboard/pengujian/permohonan/${res.data.data.uuid}`)
                     }
                 })
                 .catch(err => {

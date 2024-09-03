@@ -123,6 +123,11 @@ interface TitikPermohonan {
     }
     status_tte: number,
     status_pembayaran: number,
+    permohonan: {
+        user: {
+            golongan_id: number
+        }
+    }
 }
 import { createColumnHelper } from "@tanstack/vue-table";
 import { usePermohonan, useUmpanBalik } from '@/services';
@@ -298,7 +303,7 @@ export default defineComponent({
             column.accessor("uuid", {
                 header: "Aksi",
                 cell: (cell) => h('div', { class: 'd-flex gap-2 flex-wrap' }, [
-                    cell.row.original.status_tte == 1 && cell.row.original.status_pembayaran == 1 && h('button', {
+                    cell.row.original.status_tte == 1 && (cell.row.original.status_pembayaran == 1 || cell.row.original.permohonan?.user?.golongan_id == 2) && h('button', {
                         class: 'btn btn-sm btn-success d-flex', onClick: () => {
                             if (previewReport.value) {
                                 block('#modal-report .modal-body')

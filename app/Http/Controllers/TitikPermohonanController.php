@@ -17,7 +17,7 @@ class TitikPermohonanController extends Controller {
       $page = (($request->page) ? $request->page - 1 : 0);
 
       DB::statement('set @no=0+' . $page * $per);
-      $data = TitikPermohonan::with(['payment', 'permohonan'])->where(function ($q) use ($request) {
+      $data = TitikPermohonan::with(['payment', 'permohonan.user'])->where(function ($q) use ($request) {
         $q->where('kode', 'LIKE', '%' . $request->search . '%');
         $q->orWhere('lokasi', 'LIKE', '%' . $request->search . '%');
       })->orderBy('created_at', 'DESC')->whereHas('permohonan', function ($q) use ($request) {
@@ -35,11 +35,11 @@ class TitikPermohonanController extends Controller {
   }
 
   public function store(Request $request) {
-    if (auth()->user()->has_tagihan) {
-      return response()->json([
-        'message' => 'Anda masih memiliki tagihan yang belum dibayar. Silahkan selesaikan pembayaran terlebih dahulu.',
-      ], 422);
-    }
+    // if (auth()->user()->has_tagihan) {
+    //   return response()->json([
+    //     'message' => 'Anda masih memiliki tagihan yang belum dibayar. Silahkan selesaikan pembayaran terlebih dahulu.',
+    //   ], 422);
+    // }
 
     $rules = [
       'lokasi' => 'required',

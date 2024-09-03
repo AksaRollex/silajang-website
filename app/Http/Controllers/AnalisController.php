@@ -37,6 +37,10 @@ class AnalisController extends Controller
             })->whereYear('created_at', $request->tahun)->orderBy('kode', 'desc')->paginate($per, ['titik_permohonans.*', DB::raw('@no := @no + 1 AS no')]);
 
             $data->map(function ($a) {
+                if (auth()->user()->hasRole(['admin', 'kepala-upt', 'koordinator-administrasi', 'koordinator-teknis'])) {
+                    return $a->parameters()->orderByPivot(null ?? 'id')->get();
+                }
+
                 $allowedParams = auth()->user()->parameters()->pluck('parameters.id')->toArray();
                 $params = $a->parameters()->whereIn('parameter_id', $allowedParams)->get();
                 

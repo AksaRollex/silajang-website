@@ -78,6 +78,15 @@ const routes: Array<RouteRecordRaw> = [
 
       // Administrasi
       {
+        path: "dashboard/administrasi/kontrak",
+        name: "dashboard.administrasi.kontrak",
+        component: () => import("@/pages/dashboard/pengujian/administrasi/kontrak/Index.vue"),
+        meta: {
+          breadcrumbs: ["Administrasi", "Kontrak"],
+          permission: "kontrak",
+        }
+      },
+      {
         path: "dashboard/administrasi/penerima-sample",
         name: "dashboard.administrasi.penerima-sample",
         component: () => import("@/pages/dashboard/pengujian/administrasi/penerima/Index.vue"),

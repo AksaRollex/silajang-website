@@ -10,7 +10,7 @@
             melakukan pengeditan karena status sudah dalam {{ mapStatusPengujian(titik.status) }}</em>
         </div>
       </h2>
-      <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="$emit('close')">
+      <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="close()">
         Tutup
         <i class="la la-times-circle p-0"></i>
       </button>
@@ -356,12 +356,17 @@ export default defineComponent({
           axios.post(`/permohonan/titik/${this.selected}/save-parameter`).then(res => {
             Swal.fire('Berhasil', 'Data berhasil disimpan', 'success');
             this.$emit('close')
+            location.reload()
           }).finally(() => {
             unblock(this.$el)
           })
         }
       })
-    }
+    },
+    close() {
+        this.$emit('close')
+        location.reload()
+    },
   }
 })
 </script>

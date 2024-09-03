@@ -11,7 +11,7 @@ class Permohonan extends Model
 {
     use Uuid;
 
-    protected  $fillable = ['keterangan', 'industri', 'kegiatan', 'alamat', 'pembayaran', 'is_mandiri', 'user_id', 'jasa_pengambilan_id', 'jenis_contoh_id'];
+    protected  $fillable = ['keterangan', 'industri', 'kegiatan', 'alamat', 'pembayaran', 'is_mandiri', 'user_id', 'jasa_pengambilan_id', 'jenis_contoh_id', 'kesimpulan_kontrak', 'kontrak_id'];
     protected $appends = ['tanggal', 'editable'];
 
     public function user()
@@ -42,6 +42,11 @@ class Permohonan extends Model
     public function getTanggalAttribute()
     {
         return AppHelper::tanggal_indo(Carbon::parse($this->created_at)->format('Y-m-d'));
+    }
+
+    public function kontrak()
+    {
+        return $this->belongsTo(Kontrak::class);
     }
 
     public function getEditableAttribute()

@@ -81,7 +81,8 @@ interface Permohonan {
     },
     jenis_contoh: {
         nama: string;
-    }
+    },
+    kesimpulan_kontrak: boolean | number,
 }
 import { createColumnHelper } from "@tanstack/vue-table";
 import { block, currency, unblock } from '@/libs/utils';
@@ -137,13 +138,25 @@ export default defineComponent({
                     class: 'badge badge-info mb-2'
                 }, 'AMBIL PETUGAS'), h('div', `${cell.row.original.jasa_pengambilan.wilayah} - ${currency(cell.row.original.jasa_pengambilan.harga)}`)])
             }),
+            column.accessor("kesimpulan_kontrak", {
+                header: "Kontrak",
+                cell: cell => cell.getValue() == 1 && cell.row.original.is_mandiri == 1 ? h('span', {
+                    class: 'badge badge-secondary'
+                }, '-') : cell.getValue() == 1 ? h('span', {
+                    class: 'badge badge-success'
+                }, 'Diterima') : cell.getValue() == 2 ? h('span', {
+                    class: 'badge badge-danger'
+                }, 'Ditolak') : h ('span', {
+                    class: 'badge badge-primary'
+                }, 'Menunggu')
+            }),
             column.accessor("tanggal", {
                 header: "Tanggal",
             }),
             column.accessor("uuid", {
                 header: "Aksi",
                 cell: (cell) => h('div', { class: 'd-flex gap-2' }, [
-                    h('button', {
+                    cell.row.original.kesimpulan_kontrak == 1 && h('button', {
                         class: 'btn btn-sm btn-success d-flex', onClick: () => {
                             router.push(`/dashboard/pengujian/permohonan/${cell.getValue()}`);
                         },
