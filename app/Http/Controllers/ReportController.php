@@ -389,6 +389,79 @@ class ReportController extends Controller
         }
     }
 
+    public function reportCetakLHU(Request $request, $uuid, $save = false, $tte = false, $base64 = false)
+    {
+        $data = TitikPermohonan::with(['permohonan' => function ($q) {
+            $q->with(['jasaPengambilan', 'user.detail']);
+        }, 'peraturan', 'parameters'])->where('uuid', $uuid)->first();
+
+        if (!$data) {
+            return abort(404);
+        }
+
+        $save = filter_var($save, FILTER_VALIDATE_BOOLEAN);
+        $tte = filter_var($tte, FILTER_VALIDATE_BOOLEAN);
+
+        if (!$tte && $data->file_lhu && file_exists(storage_path('app/private/' . $data->file_lhu))) {
+            return response()->file(storage_path('app/private/' . $data->file_lhu));
+        }
+
+        $parametersUji = $data->parameters()->get();
+        $parametersUji = $parametersUji->groupBy(function ($a) {
+            return $a->jenisParameter->id . '-' . $a->jenisParameter->nama;
+        })->sortBy(function ($value, $key) {
+            return $key;
+        });
+
+        $qrCode = $request->qrCode;
+
+        $ttd = TandaTangan::where(function ($q) use ($request) {
+            if (isset($request->tanda_tangan_id)) $q->where('id', $request->tanda_tangan_id);
+            else $q->where('bagian', 'Lembar Hasil Uji');
+        })->first();
+        $setting = Setting::first();
+
+        $pdf = Pdf::loadview('report.lhu', compact('data', 'tte', 'qrCode', 'parametersUji', 'ttd', 'setting'));
+        $pdf->setPaper('F4');
+        $pdf->output();
+
+        $options = new Options();
+
+        $canvas = $pdf->getDomPDF()->getCanvas();
+        $fontMetrics = new FontMetrics($canvas, $options);
+        $canvas->page_text(250, 770, "Halaman {PAGE_NUM} dari {PAGE_COUNT}", $fontMetrics->get_font("Arial", "bold"), 10, array(0, 0, 0));
+
+        if ($base64) {
+            if (!file_exists(storage_path('app/private/lhu'))) {
+                mkdir(storage_path('app/private/lhu'), 0777, true);
+            }
+
+            file_put_contents(storage_path('app/private/lhu/LAPORAN-HASIL-PENGUJIAN-' . str_replace('/', '_', $data->kode) . '.pdf'), $pdf->output());
+            return fopen(storage_path('app/private/lhu/LAPORAN-HASIL-PENGUJIAN-' . str_replace('/', '_', $data->kode) . '.pdf'), 'r');
+        }
+
+        // $pdf->setEncryption($data->permohonan->user->phone, "admin@silajang.go.id");
+
+        if (!$save) {
+            $data->update([
+                'status' => 5,
+                'sertifikat' => $data->sertifikat == 0 ? $data->sertifikat + 1 : $data->sertifikat
+            ]);
+            TrackingPengujian::create([
+                'titik_permohonan_id' => $data->id,
+                'status' => 5,
+                'keterangan' => 'Selesai'
+            ]);
+
+            return $pdf->stream('LAPORAN-HASIL-PENGUJIAN-' . $data->kode . '.pdf');
+        } else {
+            $file = $pdf->download()->getOriginalContent();
+            Storage::put('public/lhu/LAPORAN-HASIL-PENGUJIAN-' . str_replace('/', '_', $data->kode) . '.pdf', $file);
+
+            return asset('storage/lhu/LAPORAN-HASIL-PENGUJIAN-' . str_replace('/', '_', $data->kode) . '.pdf');
+        }
+    }
+
     public function reportLHUWord(Request $request, $uuid, $save = false, $tte = false)
     {
         $data = TitikPermohonan::with(['permohonan' => function ($q) {

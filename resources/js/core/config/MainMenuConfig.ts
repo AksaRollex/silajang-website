@@ -48,6 +48,11 @@ const MainMenuConfig: Array<MenuItem> = [
             name: "penerima-sample",
             route: "/dashboard/administrasi/penerima-sample",
           },
+          {
+            heading: "Cetak LHU",
+            name: "cetak-lhu",
+            route: "/dashboard/administrasi/cetak-lhu",
+          },
         ],
       },
       {
@@ -67,9 +72,9 @@ const MainMenuConfig: Array<MenuItem> = [
             route: "/dashboard/verifikasi/koordinator-teknis",
           },
           {
-            heading: "Kepala UPT",
-            name: "kepala-upt",
-            route: "/dashboard/verifikasi/kepala-upt",
+            heading: "Verifikasi LHU",
+            name: "verifikasi-lhu",
+            route: "/dashboard/verifikasi/verifikasi-lhu",
           },
         ],
       },

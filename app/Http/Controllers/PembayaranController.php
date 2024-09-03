@@ -58,7 +58,9 @@ class PembayaranController extends Controller // Pembayaran utk Pengujian
       })->whereYear('created_at', $request->tahun)->whereMonth('created_at', $request->bulan)->orderBy('kode', 'desc')->paginate($per, ['titik_permohonans.*', DB::raw('@no := @no + 1 AS no')]);
 
       $data->map(function ($a) {
-        $a->payment->tanggal_bayar = $a->payment->tanggal_bayar ? AppHelper::tanggal_indo(Carbon::parse($a->payment->tanggal_bayar)->format('Y-m-d')) : '-';
+        if (isset($a->payment)) {
+          $a->payment->tanggal_bayar = $a->payment->tanggal_bayar ? AppHelper::tanggal_indo(Carbon::parse($a->payment->tanggal_bayar)->format('Y-m-d')) : '-';
+        }
       });
       return response()->json($data);
     } else {

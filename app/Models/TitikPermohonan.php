@@ -37,6 +37,8 @@ class TitikPermohonan extends Model {
     'tanggal_tte',
     'acuan_metode_id',
     'baku_mutu',
+    'can_upload',
+    'verifikasi_lhu',
     'hasil_pengujian',
     'memenuhi_hasil_pengujian',
     'kesimpulan_permohonan',

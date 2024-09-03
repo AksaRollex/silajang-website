@@ -27,6 +27,23 @@
                             </li>
                         </template>
                     </ul>
+                    <ul v-if="tracking.status == 7">
+                        <li class="">
+                            <span>Cetak LHU &nbsp;</span>
+                            <span class="badge badge-success" v-if="selected.sertifikat">Sudah Dilakukan</span>
+                            <span class="badge badge-light-warning" v-else>Belum Dilakukan</span>
+                        </li>
+                        <li class="">
+                            <span>Verifikasi LHU &nbsp;</span>
+                            <span class="badge badge-success" v-if="selected.verifikasi_lhu">Sudah Dilakukan</span>
+                            <span class="badge badge-light-warning" v-else>Belum Dilakukan</span>
+                        </li>
+                        <li class="">
+                            <span>Tanda Tangan TTE &nbsp;</span>
+                            <span class="badge badge-success" v-if="selected.status_tte">Sudah Dilakukan</span>
+                            <span class="badge badge-light-warning" v-else>Belum Dilakukan</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

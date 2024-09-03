@@ -20,7 +20,7 @@ class KepalaUPTController extends Controller
             $page = (($request->page) ? $request->page - 1 : 0);
 
             DB::statement('set @no=0+' . $page * $per);
-            $data = TitikPermohonan::with(['permohonan.user'])->without(['parameters', 'jenisWadahs'])->where(function ($q) use ($request) {
+            $data = TitikPermohonan::with(['permohonan.user', 'trackings'])->without(['parameters', 'jenisWadahs'])->where(function ($q) use ($request) {
                 $q->where('kode', 'LIKE', '%' . $request->search . '%');
                 $q->orWhere('lokasi', 'LIKE', '%' . $request->search . '%');
             })->where(function ($q) use ($request) {
@@ -69,17 +69,20 @@ class KepalaUPTController extends Controller
         if ($titik->status_pembayaran == 1 || $titik->permohonan->user->golongan_id == 2) {
             $titik->update([
                 'status' => 9,
+                'verifikasi_lhu' => 1,
             ]);
             TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => 8]);
             TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => 9]);
         } else {
             $titik->update([
                 'status' => 8,
+                'verifikasi_lhu' => 1,
             ]);
             TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => 8]);
         }
 
         return response()->json([
+            'data' => $titik,
             'message' => 'LHU berhasil diverifikasi',
             'status' => 'success',
         ]);
@@ -95,12 +98,32 @@ class KepalaUPTController extends Controller
 
         $titik->update([
             'status' => 7,
+            'verifikasi_lhu' => 0,
         ]);
 
-        TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => 7]);
+        TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => $titik->status]);
 
         return response()->json([
             'message' => 'LHU berhasil dikembalikan',
+            'status' => 'success',
+        ]);
+    }
+
+    public function rollbackVerif($uuid){
+        $titik = TitikPermohonan::where('uuid', $uuid)->first();
+        if(!$titik){
+            return abort(404);
+        }
+
+        $titik->update([
+            'status' => 5,
+            'memenuhi_hasil_pengujian' => 0,
+        ]);
+
+        TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => $titik->status]);
+
+        return response()->json([
+            'message' => 'LHU berhasil ditolak',
             'status' => 'success',
         ]);
     }

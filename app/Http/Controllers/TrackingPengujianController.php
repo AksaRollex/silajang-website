@@ -41,6 +41,10 @@ class TrackingPengujianController extends Controller
             $data->map(function ($a) {
                 $a->tanggal_diterima = $a->tanggal_diterima ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_diterima)->format('Y-m-d')) : '-';
                 $a->tanggal_selesai = $a->tanggal_selesai ? AppHelper::tanggal_indo(Carbon::parse($a->tanggal_selesai)->format('Y-m-d')) : '-';
+
+                $a->tracking_status_7 = $a->trackings->where('status', 7)->pluck('created_at')->map(function ($date) {
+                    return AppHelper::tanggal_indo(Carbon::parse($date)->format('Y-m-d'));
+                });
             });
 
             return response()->json($data);

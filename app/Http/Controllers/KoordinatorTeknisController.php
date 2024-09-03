@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use App\Models\TandaTangan;
 use App\Models\TitikPermohonan;
 use App\Models\TrackingPengujian;
@@ -10,6 +11,7 @@ use Dompdf\FontMetrics;
 use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class KoordinatorTeknisController extends Controller
 {
@@ -20,12 +22,12 @@ class KoordinatorTeknisController extends Controller
             $page = (($request->page) ? $request->page - 1 : 0);
 
             DB::statement('set @no=0+' . $page * $per);
-            $data = TitikPermohonan::with(['permohonan.user'])->without(['parameters', 'jenisWadahs'])->where(function ($q) use ($request) {
+            $data = TitikPermohonan::with(['permohonan.user', 'trackings'])->without(['parameters', 'jenisWadahs'])->where(function ($q) use ($request) {
                 $q->where('kode', 'LIKE', '%' . $request->search . '%');
                 $q->orWhere('lokasi', 'LIKE', '%' . $request->search . '%');
             })->where(function ($q) use ($request) {
                 if ($request->status == 5) {
-                    $q->where('status', 5);
+                    $q->where('status', 5)->where('can_upload', 0);
                 } else {
                     $q->where('status', '>', 5);
                 }
@@ -118,5 +120,78 @@ class KoordinatorTeknisController extends Controller
             'data' => $titik->parameters()->where('uuid', $request->parameter_uuid)->first(),
             'message' => 'Parameter ' . $parameter->nama . ' ditolak, silahkan cek kembali di Analis',
         ]);
+    }
+
+    public function revisi(Request $request, $uuid)
+    {
+        $request->validate([
+            'revisi' => 'required',
+        ]);
+
+        $titik = TitikPermohonan::where('uuid', $uuid)->first();
+
+        $data = $titik->update([
+            'keterangan_revisi' => $request->revisi,
+            'status' => -1,
+            'can_upload' => 1,
+        ]);
+
+        if($data){
+            TrackingPengujian::create(['titik_permohonan_id' => $titik->id, 'status' => $titik->status, 'keterangan' => $request->revisi]);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Revisi berhasil ditambahkan',
+            ]);
+        }
+    }
+
+
+    public function canUpload(Request $request, $uuid)
+    {
+        $request->validate([
+            // 'file' => 'required|file|mimes:doc,docx'
+            'file' => 'required|file|mimes:pdf'
+        ]);
+
+        $titik = TitikPermohonan::findByUuid($uuid);
+
+        $file = $request->file->store('lhu', 'private');
+
+        if ($titik->update([
+                'file_lhu' => $file,
+                'status' => 5,
+                'can_upload' => 0,
+                'sertifikat' => $titik->sertifikat == 0 ? $titik->sertifikat + 1 : $titik->sertifikat
+            ]))
+        {
+            return response()->json(['message' => 'File LHU berhasil diupload']);
+        }
+
+        return abort(500);
+    }
+
+    public function cetakLHU(Request $request)
+    {
+        if (request()->wantsJson()) {
+            $per = (($request->per) ? $request->per : 10);
+            $page = (($request->page) ? $request->page - 1 : 0);
+
+            DB::statement('set @no=0+' . $page * $per);
+            $data = TitikPermohonan::with(['permohonan.user'])->without(['parameters', 'jenisWadahs'])->where(function ($q) use ($request) {
+                $q->where('kode', 'LIKE', '%' . $request->search . '%');
+                $q->orWhere('lokasi', 'LIKE', '%' . $request->search . '%');
+            })->when(isset($request->status), function ($q) use ($request) {
+                if (is_array($request->status) && $request->can_upload == 1) {
+                    $q->whereIn('status', $request->status)->where('can_upload', 1);
+                } else {
+                    $q->where('status', '>=', 5);
+                }
+            })->whereYear('created_at', $request->tahun)->orderBy('kode', 'desc')->paginate($per, ['titik_permohonans.*', DB::raw('@no := @no + 1 AS no')]);
+
+            return response()->json($data);
+        } else {
+            return abort(404);
+        }
     }
 }
