@@ -15,13 +15,13 @@
       </div>
     </div>
     <div class="card-body">
-      <paginate ref="paginate" id="table-lhu" url="/report" :columns="columns" queryKey="lhu"
-        :payload="{ 
-          status: [9, 10, 11], 
-          // start, 
-          // end,
-          tahun,
-          bulan }">
+      <paginate ref="paginate" id="table-lhu" url="/report" :columns="columns" queryKey="lhu" :payload="{
+        status: [9, 10, 11],
+        // start, 
+        // end,
+        tahun,
+        bulan
+      }">
       </paginate>
     </div>
   </div>
@@ -131,11 +131,29 @@
       </div>
     </form>
   </div>
+  <div class="modal fade" tabindex="-1" id="modal-tte-preview">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">Preview TTE</div>
+          <!-- begin::Close -->
+          <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+            <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+          </div>
+          <!-- end::Close -->
+        </div>
+
+        <div class="modal-body fs-4">
+          <img :src="previewTTE" alt="Preview TTE">
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, h, ref } from 'vue'
-import { useDownloadPdf, useDownloadWord } from "@/libs/hooks";
+import { useDownloadPdf, useDownloadWord, useSwalConfirm } from "@/libs/hooks";
 
 interface TitikPermohonan {
   no: number,
@@ -196,6 +214,7 @@ export default defineComponent({
 
     const selected = ref<string | any>("");
     const openDetail = ref<boolean>(false);
+    const previewTTE = ref<string>("")
 
     // const date = ref<any>(`${moment().startOf('month').format('YYYY-MM-DD')} to ${moment().format('YYYY-MM-DD')}`)
     const tahun = ref(new Date().getFullYear());
@@ -233,6 +252,14 @@ export default defineComponent({
       onSuccess: () => paginate.value.refetch()
     });
 
+    const { confirm: rollbackLhu } = useSwalConfirm({
+      title: 'Apakah Anda Yakin ingin Membatalkan Verifikasi LHU ini?',
+      confirmButtonText: 'Ya, Batalkan Verifikasi',
+    }, {
+      onSuccess: () => {
+        paginate.value.refetch()
+      }
+    });
 
     const columns = [
       column.accessor("no", {
@@ -378,16 +405,22 @@ export default defineComponent({
               ]),
             ])
           ]),
-          h('button', {
-            class: 'btn btn-sm btn-light-primary', onClick: () => {
-              selected.value = cell.getValue()
-              $('#modal-upload').modal('show')
+          cell.row.original.status < 11 && h('button', {
+            class: 'btn btn-sm btn-light-warning',
+            onClick: () => rollbackLhu(`/verifikasi/kepala-upt/${cell.getValue()}/rollback`, 'POST'),
+            style: {
+              whiteSpace: 'nowrap'
             }
-          }, [
-            h('i', { class: 'la la-file-upload fs-2' }),
-            h('span', { class: 'd-none d-md-inline' }, 'Upload LHU')
-          ]),
-        ])
+          }, [h('i', { class: 'la la-refresh fs-2' }), 'Rollback']),
+          cell.row.original.status_tte == '1' && h('button', {
+            class: 'btn btn-sm btn-light-primary',
+            onClick: () => {
+              previewTTE.value = cell.row.original.permohonan?.user.detail.tanda_tangan
+              $('#modal-tte-preview').modal('show')
+            }
+          }, [h('i', { class: 'la la-eye fs-2' }), 'Preview TTE']),
+
+        ]),
       }),
     ]
 
@@ -410,6 +443,7 @@ export default defineComponent({
       reportUrl,
       block, unblock,
       iframeReport,
+      previewTTE,
       refresh: () => {
         paginate.value?.refetch()
       },
@@ -472,7 +506,7 @@ export default defineComponent({
       this.unblock('#modal-report .modal-body')
       this.refresh()
 
-      axios.post(`/permohonan/\w/${this.selected}/status-tte`, { column: "status_tte" }).then(res => {
+      axios.post(`/permohonan/titik/${this.selected}/status-tte`, { column: "status_tte" }).then(res => {
         if (res.data.status_tte === 1) toast.success('Pengajuan TTE Berhasil')
         else if (res.data.status_tte === 0) toast.error('Pengajuan TTE Gagal')
       })

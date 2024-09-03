@@ -6,10 +6,47 @@
             <label class="form-label fw-bold">Tanda Tangan</label>
             <!--end::Label-->
 
-            <!--begin::Input-->
-            <file-upload v-bind:files="files" :accepted-file-types="fileTypes"
-                v-on:updatefiles="onUpadateFiles"></file-upload>
-            <!--end::Input-->
+            <div class="d-flex row">
+                <!--begin::Input-->
+                <div class="camera-button text-center mb-3">
+                    <button type="button" class="btn btn-lg rounded-pill"
+                        :class="{ 'btn-pirmary': !isCameraOpen, 'btn-danger': isCameraOpen }" @click="toggleCamera">
+                        <span v-if="!isCameraOpen">Open Camera</span>
+                        <span v-else>Close Camera</span>
+                    </button>
+                </div>
+                <div v-if="isCameraOpen && isLoading" class="d-flex justify-content-center my-3">
+                    <ul class="list-unstyled">
+                        <li class="spinner-grow text-primary" role="status"></li>
+                        <li class="spinner-grow text-secondary" role="status"></li>
+                        <li class="spinner-grow text-success" role="status"></li>
+                    </ul>
+                </div>
+                <div v-if="isCameraOpen" v-show="!isLoading"
+                    class="position-relative d-flex justify-content-center mb-3" :class="{ 'flash': isShotPhoto }">
+
+                    <div class="camera-shutter position-absolute top-0 start-0 w-100 h-100"
+                        :class="{ 'flash': isShotPhoto }"></div>
+
+                    <video v-show="!isPhotoTaken" ref="cameraRef" class="img-fluid rounded shadow-sm" :width="450"
+                        :height="337.5" autoplay></video>
+
+                    <canvas v-show="isPhotoTaken" id="photoTaken" class="img-fluid rounded shadow-sm" ref="canvasRef"
+                        :width="450" :height="337.5"></canvas>
+                </div>
+
+                <div v-if="isCameraOpen && !isLoading" class="camera-shoot mb-3 text-center">
+                    <button type="button" class="btn btn-secondary btn-lg" @click="takePhoto">
+                        <img src="https://img.icons8.com/material-outlined/50/000000/camera--v2.png">
+                    </button>
+                </div>
+                <div class="mb-5 text-center">
+                    <span class="form-text text-muted fs-4">Or</span>
+                </div>
+                <file-upload v-bind:files="isPhotoTaken ? [photoUrl] : files" :accepted-file-types="fileTypes"
+                    v-on:updatefiles="onUpadateFiles"></file-upload>
+                <!--end::Input-->
+            </div>
             <div class="fv-plugins-message-container">
                 <div class="fv-help-block">
                     <ErrorMessage name="photo" />
@@ -151,8 +188,8 @@
             <!--end::Label-->
 
             <!--begin::Input-->
-            <Field tabindex="1" class="form-control form-control-lg form-control-solid" type="text" name="jenis_kegiatan"
-                autocomplete="off" v-model="formData.jenis_kegiatan" />
+            <Field tabindex="1" class="form-control form-control-lg form-control-solid" type="text"
+                name="jenis_kegiatan" autocomplete="off" v-model="formData.jenis_kegiatan" />
             <!--end::Input-->
             <div class="fv-plugins-message-container">
                 <div class="fv-help-block">
@@ -200,7 +237,8 @@
                     </div>
 
                     <div class="d-flex">
-                        <button type="button" class="btn btn-sm btn-light-primary mt-4 ms-auto" @click="getLatLong()">Lokasi
+                        <button type="button" class="btn btn-sm btn-light-primary mt-4 ms-auto"
+                            @click="getLatLong()">Lokasi
                             Saya</button>
                     </div>
                 </div>
@@ -285,7 +323,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, computed, ref, capitalize } from 'vue'
 import { useKabKota, useKecamatan, useKelurahan } from '@/services';
 import { useAuthStore, type DetailUser } from '@/stores/auth';
 import * as Yup from 'yup';
@@ -342,7 +380,17 @@ export default defineComponent({
             kelurahan_id: Yup.string().required('Kelurahan harus diisi'),
         })
 
+        const isCameraOpen = ref(false)
+        const isPhotoTaken = ref(false)
+        const isShotPhoto = ref(false)
+        const isLoading = ref(false)
+        const photoUrl = ref<string | null>(null)
+        const canvasRef = ref()
+        const cameraRef = ref()
+
         return {
+            canvasRef,
+            cameraRef,
             formData,
             kabKota,
             kabKotas,
@@ -355,6 +403,11 @@ export default defineComponent({
             files,
             fileTypes,
             onUpadateFiles,
+            isCameraOpen,
+            isPhotoTaken,
+            isShotPhoto,
+            isLoading,
+            photoUrl,
         }
     },
     methods: {
@@ -381,6 +434,69 @@ export default defineComponent({
                 this.formData.lat = position.coords.latitude
                 this.formData.long = position.coords.longitude
             })
+        },
+        toggleCamera() {
+            if (this.isCameraOpen) {
+                this.isCameraOpen = false
+                this.isPhotoTaken = false
+                this.isShotPhoto = false
+                this.stopCameraStream()
+            } else {
+                this.isCameraOpen = true
+                this.createCameraElement()
+            }
+        },
+        createCameraElement() {
+            this.isLoading = true;
+            const constraints = (window.constraints = {
+                audio: false,
+                video: true
+            });
+
+            navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+                this.isLoading = false;
+                this.cameraRef.srcObject = stream
+            }).catch(err => {
+                this.isLoading = false;
+                alert("May the browser didn't support or there is some errors.");
+            })
+        },
+        stopCameraStream() {
+            let tracks = this.cameraRef.srcObject.getTracks();
+
+            tracks.forEach(track => {
+                track.stop();
+            });
+        },
+        dataURLtoFile(dataurl, filename) {
+            var arr = dataurl.split(','),
+                mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[arr.length - 1]),
+                n = bstr.length,
+                u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        },
+        takePhoto() {
+            if (!this.isPhotoTaken) {
+                this.isShotPhoto = true
+
+                const FLASH_TIMEOUT = 50;
+
+                setTimeout(() => {
+                    this.isShotPhoto = false
+                }, FLASH_TIMEOUT);
+            }
+            this.isPhotoTaken = !this.isPhotoTaken
+
+            const context = this.canvasRef.getContext('2d')
+            context.drawImage(this.cameraRef, 0, 0, 450, 337.5)
+
+            const canvas = context.canvas.toDataURL()
+            this.photoUrl = canvas
+            console.log(this.photoUrl)
         }
     },
     watch: {

@@ -1,5 +1,6 @@
 <template>
     <Detail :selected="selected" @close="openDetail = false" v-if="openDetail" @refresh="refresh" />
+    <Revisi :selected="selected" @close="openRevisi = false" v-if="openRevisi" @refresh="refresh" />
 
     <div v-if="!openDetail" class="card mb-10">
         <div class="card-header align-items-center">
@@ -24,7 +25,7 @@
         </div>
         <div class="card-body">
             <paginate ref="paginateDiambil" id="table-diambil" url="/verifikasi/koordinator-teknis" :columns="columnsSudah"
-                queryKey="koordinator-teknis-1" :payload="{ status: 7, tahun: tahunSelesai }">
+                queryKey="koordinator-teknis-1" :payload="{ status: 6, tahun: tahunSelesai }">
             </paginate>
         </div>
     </div>
@@ -60,6 +61,7 @@ import { useDelete, useDownloadPdf } from "@/libs/hooks";
 import moment from 'moment';
 
 import Detail from './Detail.vue';
+import Revisi from './Revisi.vue';
 
 interface TitikPermohonan {
     no: number,
@@ -98,6 +100,7 @@ import { block, unblock } from '@/libs/utils';
 export default defineComponent({
     components: {
         Detail,
+        Revisi
     },
     setup() {
         const { previewReport } = usePreviewReport()
@@ -108,6 +111,7 @@ export default defineComponent({
 
         const selected = ref<string | any>("");
         const openDetail = ref<boolean>(false);
+        const openRevisi = ref<boolean>(false)
 
         const tahunKonfirmasi = ref(new Date().getFullYear());
         const tahunSelesai = ref(new Date().getFullYear());
@@ -159,6 +163,15 @@ export default defineComponent({
                             whiteSpace: 'nowrap'
                         }
                     }, [h('i', { class: 'la la-vial fs-2' }), 'Hasil Uji']),
+                    h('button', {
+                        class: 'btn btn-sm btn-primary', onClick: () => {
+                            selected.value = cell.getValue();
+                            openRevisi.value = true;
+                        },
+                        style: {
+                            whiteSpace: 'nowrap'
+                        }
+                    }, [h('i', { class: 'la la-pencil fs-2' }), 'Revisi']),
                 ])
             }),
         ]
@@ -238,6 +251,7 @@ export default defineComponent({
             columnsSudah,
             selected,
             openDetail,
+            openRevisi,
             paginateKonfirmasi,
             paginateDiambil,
             tahunKonfirmasi,
@@ -255,6 +269,12 @@ export default defineComponent({
         openDetail(val) {
             if (!val) {
                 this.selected = "";
+            }
+            window.scrollTo(0, 0);
+        },
+        openRevisi(val) {
+            if(!val) {
+                this.selected = ""
             }
             window.scrollTo(0, 0);
         }

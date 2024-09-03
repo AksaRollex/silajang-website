@@ -97,6 +97,7 @@ class AnalisController extends Controller
         ]);
 
         $titik->checkAnalis();
+        $titik->update(['can_upload' => 1]);
 
         return response()->json([
             'status' => 'success',

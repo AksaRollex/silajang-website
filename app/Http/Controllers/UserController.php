@@ -340,7 +340,7 @@ class UserController extends Controller
             'kelurahan_id' => 'required|exists:kelurahans,id',
         ]);
 
-        $data = $request->only('instansi', 'alamat', 'pimpinan', 'pj_mutu', 'telepon', 'fax', 'email', 'jenis_kegiatan', 'lat', 'long', 'kab_kota_id', 'kecamatan_id', 'kelurahan_id');
+        $data = $request->only('instansi', 'alamat', 'pimpinan', 'tanda_tangan', 'pj_mutu', 'telepon', 'fax', 'email', 'jenis_kegiatan', 'lat', 'long', 'kab_kota_id', 'kecamatan_id', 'kelurahan_id');
 
         // Remove old photo
         if (@auth()->user()->detail->tanda_tangan != null && @auth()->user()->detail->tanda_tangan != '') {

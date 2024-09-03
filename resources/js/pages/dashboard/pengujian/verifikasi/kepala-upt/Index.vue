@@ -119,9 +119,9 @@ export default defineComponent({
                 paginateSah.value.refetch()
             }
         });
-        const { confirm: rollbackLhu } = useSwalConfirm({
-            title: 'Apakah Anda Yakin ingin Membatalkan Verifikasi LHU ini?',
-            confirmButtonText: 'Ya, Batalkan Verifikasi',
+        const { confirm: revisiLhu } = useSwalConfirm({
+            title: 'Apakah Anda Yakin ingin Menolak Verifikasi LHU ini?',
+            confirmButtonText: 'Ya, Tolak Verifikasi',
         }, {
             onSuccess: () => {
                 paginateKonfirmasi.value.refetch()
@@ -162,14 +162,21 @@ export default defineComponent({
                 header: "Aksi",
                 cell: (cell) => h('div', { class: 'd-flex gap-2 flex-wrap' }, [
                     h('button', {
-                        class: 'btn btn-sm btn-success',
+                        class: 'btn btn-sm btn-icon btn-success',
                         onClick: () => verifikasiLhu(`/verifikasi/kepala-upt/${cell.getValue()}/verify`, 'POST'),
                         style: {
                             whiteSpace: 'nowrap'
                         }
-                    }, [h('i', { class: 'la la-check-double fs-2' }), 'Verifikasi']),
+                    }, [h('i', { class: 'la la-check-double fs-2' })]),
                     h('button', {
-                        class: 'btn btn-sm btn btn-danger', onClick: () => {
+                        class: 'btn btn-sm btn-icon btn-danger',
+                        onClick: () => revisiLhu(`/verifikasi/kepala-upt/${cell.getValue()}/rollback-verif`, 'POST'),
+                        style: {
+                            whiteSpace: 'nowrap'
+                        }
+                    }, [h('i', { class: 'la la-times fs-2' })]),
+                    h('button', {
+                        class: 'btn btn-sm btn btn-light-danger', onClick: () => {
                             if (previewReport.value) {
                                 block('#modal-report .modal-body')
                                 reportUrl.value = `/api/v1/report/${cell.getValue()}/preview-lhu?token=${localStorage.getItem('auth_token')}`
@@ -234,7 +241,7 @@ export default defineComponent({
                     ]),
                     cell.row.original.status < 9 && h('button', {
                         class: 'btn btn-sm btn-light-warning',
-                        onClick: () => rollbackLhu(`/verifikasi/kepala-upt/${cell.getValue()}/rollback`, 'POST'),
+                        onClick: () => revisiLhu(`/verifikasi/kepala-upt/${cell.getValue()}/rollback`, 'POST'),
                         style: {
                             whiteSpace: 'nowrap'
                         }

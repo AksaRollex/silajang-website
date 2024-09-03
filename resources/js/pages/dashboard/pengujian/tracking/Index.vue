@@ -75,6 +75,9 @@ export default defineComponent({
             column.accessor("tanggal_selesai", {
                 header: "Tanggal Selesai",
             }),
+            column.accessor("tracking_status_7", {
+                header: "Tanggal Pengesahan LHU",
+            }),
             column.accessor("status", {
                 header: "Status",
                 cell: cell => h('div', {

@@ -113,6 +113,15 @@ const routes: Array<RouteRecordRaw> = [
           permission: "persetujuan",
         },
       },
+      {
+        path: "dashboard/administrasi/cetak-lhu",
+        name: "dashboard.administrasi.cetak-lhu",
+        component: () => import("@/pages/dashboard/pengujian/administrasi/cetak-lhu/Index.vue"),
+        meta: {
+          breadcrumbs: ["Administrasi", "Cetak-Lhu"],
+          permission: "cetak-lhu",
+        },
+      },
 
       // Verifikasi
       {
@@ -134,12 +143,12 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: "dashboard/verifikasi/kepala-upt",
-        name: "dashboard.verifikasi.kepala-upt",
+        path: "dashboard/verifikasi/verifikasi-lhu",
+        name: "dashboard.verifikasi.verifikasi-lhu",
         component: () => import("@/pages/dashboard/pengujian/verifikasi/kepala-upt/Index.vue"),
         meta: {
-          breadcrumbs: ["Verifikasi", "Kepala UPT"],
-          permission: "kepala-upt",
+          breadcrumbs: ["Verifikasi", "Verifikasi LHU"],
+          permission: "verifikasi-lhu",
         },
       },
 
