@@ -47,7 +47,7 @@ class TitikPermohonanPeraturanController extends Controller {
 
     $parameters = [];
     foreach ($peraturan->parameters as $param) {
-      $parameters[$param->id] = ['harga' => $param->harga, 'satuan' => $param->satuan, 'mdl' => $param->mdl, 'kuantitas' => 1, 'baku_mutu' => $param->pivot->baku_mutu];
+      $parameters[$param->id] = ['harga' => $param->harga, 'satuan' => $param->satuan, 'mdl' => $param->mdl, 'kuantitas' => 1, 'baku_mutu' => $param->pivot->baku_mutu, 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')];
     }
     // dd($parameters);
 

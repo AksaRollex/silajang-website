@@ -30,7 +30,12 @@ class GlobalPaymentController extends Controller
 
             $data->map(function ($a) {
                 $a->tanggal_dibuat = AppHelper::tanggal_indo(Carbon::parse($a->created_at)->format('Y-m-d'));
-                $a->tanggal_exp_indo = AppHelper::tanggal_indo($a->tanggal_exp);
+
+                if (isset($a->tanggal_exp)) {
+                  $a->tanggal_exp_indo = AppHelper::tanggal_indo($a->tanggal_exp);
+                } else if (isset($a->qris_expired)) {
+                  $a->tanggal_exp_indo = AppHelper::tanggal_indo($a->qris_expired);
+                }
             });
 
             return response()->json($data);

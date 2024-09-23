@@ -15,11 +15,14 @@
         <select2 placeholder="Pilih Bulan" class="form-select-solid mw-200px mw-md-100" name="bulan" :options="bulans"
           v-model="bulan">
         </select2>
+        <select2 placeholder="Pilih Metode" class="form-select-solid mw-200px mw-md-100" name="type"
+          :options="[{ id: 'va', text: 'Virtual Account' }, { id: 'qris', text: 'QRIS' }]" v-model="type">
+        </select2>
       </div>
     </div>
     <div class="card-body">
       <paginate ref="paginate" id="table-konfirmasi" url="/pembayaran/pengujian" :columns="columns"
-        queryKey="pengujian-0" :payload="{ tahun, bulan }">
+        queryKey="pengujian-0" :payload="{ tahun, bulan, type }">
       </paginate>
     </div>
   </div>
@@ -225,6 +228,10 @@ export default defineComponent({
           cell.row.original.payment?.is_expired ? h('span', { class: `badge badge-light-danger` }, 'Kedaluwarsa') : h('span', { class: `badge badge-light-${cell.getValue()?.status == 'pending' ? 'info' : (cell.getValue()?.status == 'success' ? 'success' : 'danger')}` }, cell.row.original.text_status_pembayaran)
         ])
       }),
+      column.accessor("payment.type", {
+        header: "Metode",
+        cell: cell => h('span', { class: `badge badge-light-${cell.getValue() == 'va' ? 'success' : 'primary'}` }, cell.getValue().toUpperCase())
+      }),
       column.accessor("payment.tanggal_bayar", {
         header: "Tanggal Bayar",
       }),
@@ -379,11 +386,12 @@ export default defineComponent({
               ]),
             ]),
           ]),
-          cell.row.original.text_status_pembayaran == 'Belum Dibayar' && h('button', { 
+          cell.row.original.text_status_pembayaran == 'Belum Dibayar' && Boolean(cell.row.original.payment) && h('button', {
             class: 'btn btn-sm btn-icon btn-success', onClick: () => {
               selected.value = cell.getValue()
               sentWa(selected.value)
-            }},
+            }
+          },
             h('i', { class: 'fa-brands fa-whatsapp' })
           )
         ])
@@ -397,7 +405,9 @@ export default defineComponent({
       text: `${item.bagian} - ${item.user?.nama} (${item.user?.nik})`
     })))
 
+    const type = ref("va")
     return {
+      type,
       columns,
       selected,
       openDetail,
@@ -422,10 +432,10 @@ export default defineComponent({
     massReport() {
       if (this.previewReport) {
         block('#modal-report .modal-body')
-        this.reportUrl = `/api/v1/report/pembayaran/pengujian?tahun=${this.tahun}&bulan=${this.bulan}&token=${localStorage.getItem('auth_token')}`
+        this.reportUrl = `/api/v1/report/pembayaran/pengujian?tahun=${this.tahun}&bulan=${this.bulan}&type=${this.type}&token=${localStorage.getItem('auth_token')}`
         $('#modal-report').modal('show')
       } else {
-        this.downloadReport(`/report/pembayaran/pengujian?tahun=${this.tahun}`)
+        this.downloadReport(`/report/pembayaran/pengujian?tahun=${this.tahun}&bulan=${this.bulan}&type=${this.type}`)
       }
     },
     sendTteLhu() {

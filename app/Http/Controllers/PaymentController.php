@@ -8,6 +8,8 @@ use App\Models\LogBankJatim;
 use App\Models\Payment;
 use App\Models\TrackingPengujian;
 use App\Services\BankJatim;
+use App\Services\BankJatimQris;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +17,9 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller // Pembayaran utk Non Pengujian
 {
   public function post(Request $request) {
+    Log::info("=== POST PAYMENT ===");
+    Log::info($request->all());
+
     $request->validate([
       'VirtualAccount' => 'required',
       'Amount' => 'required',
@@ -43,19 +48,40 @@ class PaymentController extends Controller // Pembayaran utk Non Pengujian
         'tanggal_bayar' => date('Y-m-d')
       ]);
 
-      $payment->titikPermohonan->update([
-        'status_pembayaran' => 1
-      ]);
+      if ($payment->multiPayments->count() > 0) {
+        foreach ($payment->multiPayments as $item) {
+          $item->titikPermohonan->update([
+            'status_pembayaran' => 1
+          ]);
 
-      if ($payment->titikPermohonan->status == 8) {
-        $payment->titikPermohonan->update([
-          'status' => 9,
-        ]);
+          if ($item->titikPermohonan->status == 8) {
+            $item->titikPermohonan->update([
+              'status' => 9,
+            ]);
 
-        TrackingPengujian::create([
-          'titik_permohonan_id' => $payment->titik_permohonan_id,
-          'status' => 9,
-        ]);
+            TrackingPengujian::create([
+              'titik_permohonan_id' => $item->titik_permohonan_id,
+              'status' => 9,
+            ]);
+          }
+        }
+      } else {
+        if ($payment->titikPermohonan) {
+          $payment->titikPermohonan->update([
+            'status_pembayaran' => 1
+          ]);
+
+          if ($payment->titikPermohonan->status == 8) {
+            $payment->titikPermohonan->update([
+              'status' => 9,
+            ]);
+
+            TrackingPengujian::create([
+              'titik_permohonan_id' => $payment->titik_permohonan_id,
+              'status' => 9,
+            ]);
+          }
+        }
       }
     }
 
@@ -89,10 +115,15 @@ class PaymentController extends Controller // Pembayaran utk Non Pengujian
         $q->orWhere('nama', 'LIKE', '%' . $request->search . '%');
         $q->orWhere('jumlah', 'LIKE', '%' . $request->search . '%');
         $q->orWhere('tanggal_exp', 'LIKE', '%' . $request->search . '%');
-      })->where('titik_permohonan_id', null)->where('status', '!=', 'failed')->orderBy('created_at', 'desc')->whereYear('created_at', $request->tahun)->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
+      })->where('titik_permohonan_id', null)->whereDoesntHave('multiPayments')->where('status', '!=', 'failed')->orderBy('created_at', 'desc')->whereYear('created_at', $request->tahun)->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
+      // })->where('type', $request->type)->where('titik_permohonan_id', null)->whereDoesntHave('multiPayments')->where('status', '!=', 'failed')->orderBy('created_at', 'desc')->whereYear('created_at', $request->tahun)->paginate($per, ['*', DB::raw('@no := @no + 1 AS no')]);
 
       $data->map(function ($a) {
-        $a->tanggal_exp_indo = AppHelper::tanggal_indo($a->tanggal_exp);
+        if ($a->type == 'va') {
+          $a->tanggal_exp_indo = $a->tanggal_exp ? AppHelper::tanggal_indo($a->tanggal_exp) : '-';
+        } else {
+          $a->tanggal_exp_indo = $a->qris_expired ? AppHelper::tanggal_indo(Carbon::parse($a->qris_expired)->format('Y-m-d')) : '-';
+        }
       });
 
       return response()->json($data);
@@ -102,7 +133,8 @@ class PaymentController extends Controller // Pembayaran utk Non Pengujian
   }
 
   public function store(Request $request) {
-    $this->validate($request, [
+    $data = $this->validate($request, [
+      'type' => 'required',
       'nama' => 'required',
       'jumlah' => 'required',
       'tanggal_exp' => 'required',
@@ -114,37 +146,56 @@ class PaymentController extends Controller // Pembayaran utk Non Pengujian
       'berita5' => 'nullable',
     ]);
 
-    $data = $request->only([
-      'nama',
-      'jumlah',
-      'tanggal_exp',
-      'kode_retribusi_id',
-      'berita1',
-      'berita2',
-      'berita3',
-      'berita4',
-      'berita5',
-    ]);
-
     $kodeRet = KodeRetribusi::find($request->kode_retribusi_id);
     $bankJatim = new BankJatim();
-    $data['va_number'] = $bankJatim->getVA($kodeRet);
+    $bankJatimQris = new BankJatimQris();
+
+    if ($data['type'] == 'va') {
+      $data['va_number'] = $bankJatim->getVA($kodeRet);
+    } else {
+      $data['qris_number'] = time() . rand(1000, 9999);
+    }
 
     $data['jumlah'] = str_replace('.', '', $data['jumlah']);
     $data['jumlah'] = str_replace(',', '.', $data['jumlah']);
+
+    if ($data['type'] == 'qris') {
+      $data['qris_expired'] = $data['tanggal_exp'] . ' 23:59:59';
+      unset($data['tanggal_exp']);
+    } else {
+      unset($data['qris_expired']);
+    }
 
     $response = '';
 
     if ($payment = Payment::create($data)) {
       $payment->genKode();
-      try {
-        $response = $bankJatim->registerVA($payment);
-        if (!@$response['status']) {
-          Log::info([
+
+      if ($payment->type == 'va') {
+        try {
+          $response = $bankJatim->registerVA($payment);
+          if (!@$response['status']) {
+            Log::info([
+              'va_number' => $data['va_number'],
+              'status' => 'error',
+              // 'status' => 'success',
+              'message' => json_encode($response),
+              'ip_address' => $request->ip(),
+              'user_agent' => $request->userAgent(),
+              'created_at' => date('Y-m-d H:i:s')
+            ]);
+
+            $payment->delete();
+            return response()->json([
+              'message' => 'VA pembayaran gagal dibuat. Silahkan coba lagi.',
+            ], 500);
+          }
+        } catch (\Throwable $th) {
+          log::info([
             'va_number' => $data['va_number'],
             'status' => 'error',
             // 'status' => 'success',
-            'message' => json_encode($response),
+            'message' => json_encode($th->getMessage()),
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'created_at' => date('Y-m-d H:i:s')
@@ -155,21 +206,45 @@ class PaymentController extends Controller // Pembayaran utk Non Pengujian
             'message' => 'VA pembayaran gagal dibuat. Silahkan coba lagi.',
           ], 500);
         }
-      } catch (\Throwable $th) {
-        log::info([
-          'va_number' => $data['va_number'],
-          'status' => 'error',
-          // 'status' => 'success',
-          'message' => json_encode($th->getMessage()),
-          'ip_address' => $request->ip(),
-          'user_agent' => $request->userAgent(),
-          'created_at' => date('Y-m-d H:i:s')
-        ]);
+      } else if ($payment->type == 'qris') {
+        try {
+          $response = $bankJatimQris->createQR($payment);
+          if ($response->failed()) {
+            Log::info([
+              'qris_number' => $data['qris_number'],
+              'status' => 'error',
+              // 'status' => 'success',
+              'message' => json_encode($response->body()),
+              'ip_address' => $request->ip(),
+              'user_agent' => $request->userAgent(),
+              'created_at' => date('Y-m-d H:i:s')
+            ]);
 
-        $payment->delete();
-        return response()->json([
-          'message' => 'VA pembayaran gagal dibuat. Silahkan coba lagi.',
-        ], 500);
+            $payment->delete();
+            return response()->json([
+              'message' => 'QRIS gagal dibuat. Silahkan coba lagi.',
+            ], 500);
+          }
+        } catch (\Throwable $th) {
+          Log::info([
+            'qris_number' => $data['qris_number'],
+            'status' => 'error',
+            // 'status' => 'success',
+            'message' => json_encode($response->body()),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'created_at' => date('Y-m-d H:i:s')
+          ]);
+
+          $payment->delete();
+          return response()->json([
+            'message' => 'QRIS gagal dibuat. Silahkan coba lagi.',
+          ], 500);
+        }
+
+        $payment->update([
+          'qris_value' => $response->collect('qrValue')->first()
+        ]);
       }
 
       return response()->json([
@@ -181,6 +256,9 @@ class PaymentController extends Controller // Pembayaran utk Non Pengujian
 
   public function edit($uuid) {
     $payment = Payment::findByUuid($uuid);
+    if ($payment->type == 'qris') {
+      $payment->tanggal_exp = $payment->qris_expired;
+    }
     return response()->json([
       'data' => $payment
     ]);

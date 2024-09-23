@@ -119,30 +119,40 @@
                 <h4 style="font-weight: 400; text-align: center">(SURAT KETETAPAN RETRIBUASI DAERAH)</h4>
 
                 <br>
-                <div>MASA RETRIBUSI:
-                    {{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->payment->created_at)->format('Y-m-d')) }}
-                    s/d
-                    {{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->payment->tanggal_exp)->format('Y-m-d')) }}
-                </div>
-                <div>TAHUN RETRIBUSI: {{ Carbon\Carbon::parse($data->payment->created_at)->format('Y') }}</div>
+                @if (request()->multi_payment == 1)
+                    <div>MASA RETRIBUSI:
+                        {{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->created_at)->format('Y-m-d')) }}
+                        s/d
+                        {{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->tanggal_exp)->format('Y-m-d')) }}
+                    </div>
+                    <div>TAHUN RETRIBUSI: {{ Carbon\Carbon::parse($data->created_at)->format('Y') }}</div>
+                @else
+                    <div>MASA RETRIBUSI:
+                        {{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->payment->created_at)->format('Y-m-d')) }}
+                        s/d
+                        {{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->payment->tanggal_exp)->format('Y-m-d')) }}
+                    </div>
+                    <div>TAHUN RETRIBUSI: {{ Carbon\Carbon::parse($data->payment->created_at)->format('Y') }}</div>
+                @endif
             </td>
             <td>
                 <h4 style="font-weight: 400; text-align: center">NO. URUT</h4>
-                <h4 style="font-weight: 400; text-align: center">{{ $data->payment->kode }}</h4>
+                <h4 style="font-weight: 400; text-align: center">
+                    {{ request()->multi_payment == 1 ? $data->kode : $data->payment->kode }}</h4>
             </td>
         </tr>
         <tr>
             <td colspan="7" style="border: 0; border-left: 2px solid #000; border-right: 2px solid #000">NAMA</td>
             <td colspan="3" style="border: 0; border-right: 2px solid #000">
                 <span>:</span>
-                <span>{{ $data->permohonan->user->nama }}</span>
+                <span>{{ $permohonan->user->nama }}</span>
             </td>
         </tr>
         <tr>
             <td colspan="7" style="border: 0; border-left: 2px solid #000; border-right: 2px solid #000">ALAMAT</td>
             <td colspan="3" style="border: 0; border-right: 2px solid #000">
                 <span>:</span>
-                <span>{{ $data->permohonan->user->detail->alamat }}</span>
+                <span>{{ $permohonan->user->detail->alamat }}</span>
             </td>
         </tr>
         {{-- <tr>
@@ -150,7 +160,7 @@
             </td>
             <td colspan="3" style="border: 0; border-right: 2px solid #000">
                 <span>:</span>
-                <span>{{ $data->permohonan->user->detail->npwp }}</span>
+                <span>{{ $permohonan->user->detail->npwp }}</span>
             </td>
         </tr> --}}
         <tr>
@@ -158,7 +168,7 @@
             </td>
             <td colspan="3" style="border: 0; border-right: 2px solid #000">
                 <span>:</span>
-                <span>{{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse($data->payment->tanggal_exp)->format('Y-m-d')) }}</span>
+                <span>{{ App\Helpers\AppHelper::tanggal_indo(Carbon\Carbon::parse(request()->multi_payment == 1 ? $data->tanggal_exp : $data->payment->tanggal_exp)->format('Y-m-d')) }}</span>
             </td>
         </tr>
         <tr>
@@ -185,17 +195,17 @@
                     Pengujian : {{ @$data->jenis_sampel->nama }}
                 </div>
                 <div>
-                    Parameter Pengujian : {{ $data->parameters->pluck('nama')->join(', ') }}
+                    Parameter Pengujian : {{ $parametersUji->pluck('nama')->join(', ') }}
                 </div>
                 <div>
                     Biaya Pengambilan :
                     @php
                         $biaya = 0;
-                        if ($data->permohonan->jasaPengambilan) {
-                            $biaya += $data->permohonan->jasaPengambilan->harga;
+                        if ($permohonan->jasaPengambilan) {
+                            $biaya += $permohonan->jasaPengambilan->harga;
                         }
-                        if ($data->permohonan->radiusPengambilan) {
-                            $biaya += $data->permohonan->radiusPengambilan->harga;
+                        if ($permohonan->radiusPengambilan) {
+                            $biaya += $permohonan->radiusPengambilan->harga;
                         }
                     @endphp
                     {{ App\Helpers\AppHelper::rupiah($biaya) }}
@@ -212,7 +222,7 @@
                 <h3 style="font-weight: 700; text-align: center">JUMLAH KETETAPAN</h3>
             </td>
             <td>
-                {{ App\Helpers\AppHelper::rupiah($biaya + $data->harga) }}
+                {{ App\Helpers\AppHelper::rupiah(request()->multi_payment == 1 ? $data->jumlah : $biaya + $data->harga) }}
             </td>
         </tr>
         <tr>
@@ -220,7 +230,8 @@
                 Terbilang :
             </td>
             <td colspan="8" style="vertical-align: top; border-left: 0">
-                {{ App\Helpers\AppHelper::AngkaToText($biaya + $data->harga) }} Rupiah
+                {{ App\Helpers\AppHelper::AngkaToText(request()->multi_payment == 1 ? $data->jumlah : $biaya + $data->harga) }}
+                Rupiah
             </td>
         </tr>
         <tr>
@@ -229,10 +240,19 @@
             </td>
             <td colspan="8" style="vertical-align: top; border-left: 0">
                 <ol style="padding: 0 0 0 1rem; margin: 0">
-                    <li>
-                        Harap pembayaran dilakukan secara non tunai dengan melakukan pembayaran ke rekening Bank Jatim
-                        Dinas Lingkungan Hidup sesuai dengan kode Virtual Account : {{ $data->payment->va_number }}
-                    </li>
+                    @if (request()->multi_payment == 1)
+                        <li>
+                            Harap pembayaran dilakukan secara non tunai dengan melakukan pembayaran ke rekening Bank
+                            Jatim
+                            Dinas Lingkungan Hidup sesuai dengan kode Virtual Account : {{ $data->va_number }}
+                        </li>
+                    @else
+                        <li>
+                            Harap pembayaran dilakukan secara non tunai dengan melakukan pembayaran ke rekening Bank
+                            Jatim
+                            Dinas Lingkungan Hidup sesuai dengan kode Virtual Account : {{ $data->payment->va_number }}
+                        </li>
+                    @endif
                     <li>
                         Apabila SKRD ini tidak dibayarkan atau kurang bayar setelah lewat waktu paling lama 30 hari
                         sejak SKRD ini diterima dikenakan sanksi administrasi berupa Bunga sebesar 2% per bulan.
@@ -269,7 +289,7 @@
                 <div>Pelanggan</div>
                 <br><br><br><br><br><br>
                 <div>
-                    <strong>{{ $data->permohonan->user->nama }}</strong>
+                    <strong>{{ $permohonan->user->nama }}</strong>
                 </div>
             </td>
             <td colspan="2" style="text-align: center">

@@ -8,6 +8,7 @@ use App\Models\TitikPermohonan;
 use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -57,7 +58,9 @@ class TTEController extends Controller {
             'created_at' => date('Y-m-d H:i:s')
           ]);
 
-          unlink(storage_path('app/private/lhu/' . $filename));
+          if (file_exists(storage_path('app/private/lhu/' . $filename))) {
+            unlink(storage_path('app/private/lhu/' . $filename));
+          }
 
           $data->update(['status_tte' => 0]);
 
@@ -74,6 +77,8 @@ class TTEController extends Controller {
           'created_at' => date('Y-m-d H:i:s')
         ]);
 
+        Log::info("=== SUCCESS TTE ===");
+        Log::info($response);
         Storage::put('private/lhu/' . $filename, $response);
 
         $data->update(['status_tte' => 1]);

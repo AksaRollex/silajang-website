@@ -25,7 +25,11 @@ const MainMenuConfig: Array<MenuItem> = [
   {
     heading: "Pengujian",
     name: "pengujian",
-    route: ["/dashboard/administrasi", "/dashboard/verifikasi", "/dashboard/report"],
+    route: [
+      "/dashboard/administrasi",
+      "/dashboard/verifikasi",
+      "/dashboard/report",
+    ],
     pages: [
       {
         sectionTitle: "Administrasi",
@@ -33,6 +37,11 @@ const MainMenuConfig: Array<MenuItem> = [
         keenthemesIcon: "monitor-mobile",
         name: "administrasi",
         sub: [
+          {
+            heading: "Kontrak",
+            name: "kontrak",
+            route: "/dashboard/administrasi/kontrak",
+          },
           {
             heading: "Persetujuan",
             name: "persetujuan",
@@ -67,9 +76,14 @@ const MainMenuConfig: Array<MenuItem> = [
             route: "/dashboard/verifikasi/koordinator-teknis",
           },
           {
-            heading: "Kepala UPT",
-            name: "kepala-upt",
-            route: "/dashboard/verifikasi/kepala-upt",
+            heading: "Cetak LHU",
+            name: "cetak-lhu",
+            route: "/dashboard/administrasi/cetak-lhu",
+          },
+          {
+            heading: "Verifikasi LHU",
+            name: "verifikasi-lhu",
+            route: "/dashboard/verifikasi/verifikasi-lhu",
           },
         ],
       },
@@ -118,19 +132,29 @@ const MainMenuConfig: Array<MenuItem> = [
         route: "/dashboard/pengujian/tracking",
         keenthemesIcon: "search-list",
       },
-    ]
+    ],
   },
 
   // Pembayaran
   {
+    heading: "Pembayaran",
+    name: "pembayaran-customer",
+    route: "/dashboard/pembayaran",
+    meta: {
+      golonganId: 1,
+    },
     pages: [
       {
-        heading: "Pembayaran",
+        heading: "Pengujian",
         name: "pembayaran-customer",
-        route: "/dashboard/pembayaran",
-        meta: {
-          golonganId: 1
-        }
+        keenthemesIcon: "wallet",
+        route: "/dashboard/pembayaran/customer",
+      },
+      {
+        heading: "Multi Payment",
+        name: "pembayaran-multi",
+        keenthemesIcon: "two-credit-cart",
+        route: "/dashboard/pembayaran/multi",
       },
     ],
   },
@@ -146,6 +170,12 @@ const MainMenuConfig: Array<MenuItem> = [
         route: "/dashboard/pembayaran/pengujian",
       },
       {
+        heading: "Multi Payment",
+        name: "pembayaran-multi-payment",
+        keenthemesIcon: "two-credit-cart",
+        route: "/dashboard/pembayaran/multi-payment",
+      },
+      {
         heading: "Non Pengujian",
         name: "pembayaran-non-pengujian",
         keenthemesIcon: "credit-cart",
@@ -156,8 +186,8 @@ const MainMenuConfig: Array<MenuItem> = [
         name: "pembayaran-global",
         keenthemesIcon: "bank",
         route: "/dashboard/pembayaran/global",
-      }
-    ]
+      },
+    ],
   },
 
   // Master Data
@@ -270,7 +300,7 @@ const MainMenuConfig: Array<MenuItem> = [
           },
         ],
       },
-    ]
+    ],
   },
 
   // Konfigurasi
@@ -350,7 +380,7 @@ const MainMenuConfig: Array<MenuItem> = [
           },
         ],
       },
-    ]
+    ],
   },
 ];
 

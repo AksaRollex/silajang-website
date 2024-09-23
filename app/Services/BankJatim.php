@@ -56,22 +56,7 @@ class BankJatim {
   }
 
   public function registerVA(Payment $payment) {
-    $response = $this->client->post('Va/RegPen', [
-      'json' => [
-        'VirtualAccount' => $payment->va_number,
-        'Nama' => $payment->nama,
-        'TotalTagihan' => $payment->jumlah,
-        'TanggalExp' => Carbon::parse($payment->tanggal_exp)->format('Ymd'),
-        'Berita1' => $payment->berita1 ?? "",
-        'Berita2' => $payment->berita2 ?? "",
-        'Berita3' => $payment->berita3 ?? "",
-        'Berita4' => $payment->berita4 ?? "",
-        'Berita5' => $payment->berita5 ?? "",
-        'FlagProses' => 1,
-      ]
-    ]);
-
-    Log::info([
+    $body = [
       'VirtualAccount' => $payment->va_number,
       'Nama' => $payment->nama,
       'TotalTagihan' => $payment->jumlah,
@@ -82,6 +67,12 @@ class BankJatim {
       'Berita4' => $payment->berita4 ?? "",
       'Berita5' => $payment->berita5 ?? "",
       'FlagProses' => 1,
+    ];
+
+    Log::info($body);
+
+    $response = $this->client->post('Va/RegPen', [
+      'json' => $body
     ]);
 
     $response = json_decode($response->getBody()->getContents(), true);

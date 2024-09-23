@@ -10,7 +10,7 @@
             melakukan pengeditan karena status sudah dalam {{ mapStatusPengujian(titik.status) }}</em>
         </div>
       </h2>
-      <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="$emit('close')">
+      <button type="button" class="btn btn-sm btn-light-danger ms-auto" @click="close()">
         Tutup
         <i class="la la-times-circle p-0"></i>
       </button>
@@ -47,7 +47,7 @@
                   <div>{{ currency(paket.harga) }}</div>
                   <div class="separator my-5"></div>
                   <div>{{ paket.parameters.map(param => `${param.nama} ${param.keterangan ?
-        `(${param.keterangan})` : ''}`).join(", ") }}</div>
+                    `(${param.keterangan})` : ''}`).join(", ") }}</div>
                 </div>
               </div>
               <div v-else
@@ -59,7 +59,7 @@
                   <div>{{ currency(paket.harga) }}</div>
                   <div class="separator my-5"></div>
                   <div>{{ paket.parameters.map(param => `${param.nama} ${param.keterangan ?
-        `(${param.keterangan})` : ''}`).join(", ") }}</div>
+                    `(${param.keterangan})` : ''}`).join(", ") }}</div>
                 </div>
               </div>
             </div>
@@ -78,8 +78,8 @@
             :url="`/permohonan/titik/${selected}/parameter`" :columns="columnsSelectedParameter"></paginate>
 
           <div class="d-flex fs-4 gap-4 justify-content-end mt-10">Total Harga: <strong>{{
-        currency(titik?.harga)
-      }}</strong></div>
+            currency(titik?.harga)
+              }}</strong></div>
         </div>
       </div>
     </div>
@@ -361,7 +361,11 @@ export default defineComponent({
           })
         }
       })
-    }
+    },
+    close() {
+      this.$emit('close')
+      location.reload()
+    },
   }
 })
 </script>

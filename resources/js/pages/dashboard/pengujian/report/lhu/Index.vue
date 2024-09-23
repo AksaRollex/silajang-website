@@ -15,13 +15,13 @@
       </div>
     </div>
     <div class="card-body">
-      <paginate ref="paginate" id="table-lhu" url="/report" :columns="columns" queryKey="lhu"
-        :payload="{ 
-          status: [9, 10, 11], 
-          // start, 
-          // end,
-          tahun,
-          bulan }">
+      <paginate ref="paginate" id="table-lhu" url="/report" :columns="columns" queryKey="lhu" :payload="{
+        status: [8, 9, 10, 11],
+        // start,
+        // end,
+        tahun,
+        bulan
+      }">
       </paginate>
     </div>
   </div>
@@ -131,11 +131,30 @@
       </div>
     </form>
   </div>
+  <div class="modal fade" tabindex="-1" id="modal-tte-preview">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">Preview TTE</div>
+          <!-- begin::Close -->
+          <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+            <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
+          </div>
+          <!-- end::Close -->
+        </div>
+
+        <div class="modal-body fs-4">
+          <iframe :src="previewTTE" frameborder="0" class="w-100 h-700px" ref="iframeReport"
+            @load="onLoadIframe"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
 import { computed, defineComponent, h, ref } from 'vue'
-import { useDownloadPdf, useDownloadWord } from "@/libs/hooks";
+import { useDownloadPdf, useDownloadWord, useSwalConfirm } from "@/libs/hooks";
 
 interface TitikPermohonan {
   no: number,
@@ -196,6 +215,7 @@ export default defineComponent({
 
     const selected = ref<string | any>("");
     const openDetail = ref<boolean>(false);
+    const previewTTE = ref<string>("")
 
     // const date = ref<any>(`${moment().startOf('month').format('YYYY-MM-DD')} to ${moment().format('YYYY-MM-DD')}`)
     const tahun = ref(new Date().getFullYear());
@@ -233,6 +253,14 @@ export default defineComponent({
       onSuccess: () => paginate.value.refetch()
     });
 
+    const { confirm: rollbackLhu } = useSwalConfirm({
+      title: 'Apakah Anda Yakin ingin Membatalkan Verifikasi LHU ini?',
+      confirmButtonText: 'Ya, Batalkan Verifikasi',
+    }, {
+      onSuccess: () => {
+        paginate.value.refetch()
+      }
+    });
 
     const columns = [
       column.accessor("no", {
@@ -336,57 +364,68 @@ export default defineComponent({
               ]),
             ])
           ]),
-          h('div', { class: 'dropup' }, [
-            h('button', {
-              class: 'btn btn-sm btn btn-light-success',
-              'data-bs-toggle': 'dropdown',
-            }, [
-              h('i', { class: 'la la-file-contract me-0 fs-2' }),
-              h('span', { class: 'd-none d-md-inline me-2' }, 'Cetak LHU'),
-              h('i', { class: 'la la-angle-down me-0 fs-2' }),
-            ]),
-            h('div', {
-              class: 'dropdown-menu',
-            }, [
-              h('div', { class: 'dropdown-item px-3' }, [
-                h('button', {
-                  class: 'btn btn-sm w-100 text-start btn-danger', onClick: () => {
-                    if (previewReport.value) {
-                      block('#modal-report .modal-body')
-                      reportUrl.value = `/api/v1/report/${cell.getValue()}/lhu?token=${localStorage.getItem('auth_token')}`
+          // h('div', { class: 'dropup' }, [
+          //   h('button', {
+          //     class: 'btn btn-sm btn btn-light-success',
+          //     'data-bs-toggle': 'dropdown',
+          //   }, [
+          //     h('i', { class: 'la la-file-contract me-0 fs-2' }),
+          //     h('span', { class: 'd-none d-md-inline me-2' }, 'Cetak LHU'),
+          //     h('i', { class: 'la la-angle-down me-0 fs-2' }),
+          //   ]),
+          //   h('div', {
+          //     class: 'dropdown-menu',
+          //   }, [
+          //     h('div', { class: 'dropdown-item px-3' }, [
+          //       h('button', {
+          //         class: 'btn btn-sm w-100 text-start btn-danger', onClick: () => {
+          //           if (previewReport.value) {
+          //             block('#modal-report .modal-body')
+          //             reportUrl.value = `/api/v1/report/${cell.getValue()}/lhu?token=${localStorage.getItem('auth_token')}`
 
-                      iframeReport.value.contentWindow.location.reload()
-                      $('#modal-report').modal('show')
-                    } else {
-                      downloadReport(`/report/${cell.getValue()}/lhu`)
-                    }
-                  }
-                }, [
-                  h('i', { class: 'la la-file-pdf fs-2' }),
-                  h('span', { class: 'd-none d-md-inline' }, 'PDF')
-                ]),
-              ]),
-              h('div', { class: 'dropdown-item px-3' }, [
-                h('button', {
-                  class: 'btn btn-sm w-100 text-start btn-primary', onClick: () => {
-                    downloadReportWord(`/report/${cell.getValue()}/lhu/word`)
-                  }
-                }, [
-                  h('i', { class: 'la la-file-word fs-2' }),
-                  h('span', { class: 'd-none d-md-inline' }, 'WORD')
-                ]),
-              ]),
-            ])
-          ]),
-          h('button', {
-            class: 'btn btn-sm btn-light-primary', onClick: () => {
-              selected.value = cell.getValue()
-              $('#modal-upload').modal('show')
+          //             iframeReport.value.contentWindow.location.reload()
+          //             $('#modal-report').modal('show')
+          //           } else {
+          //             downloadReport(`/report/${cell.getValue()}/lhu`)
+          //           }
+          //         }
+          //       }, [
+          //         h('i', { class: 'la la-file-pdf fs-2' }),
+          //         h('span', { class: 'd-none d-md-inline' }, 'PDF')
+          //       ]),
+          //     ]),
+          //     h('div', { class: 'dropdown-item px-3' }, [
+          //       h('button', {
+          //         class: 'btn btn-sm w-100 text-start btn-primary', onClick: () => {
+          //           downloadReportWord(`/report/${cell.getValue()}/lhu/word`, "GET", {}, `LAPORAN-HASIL-PENGUJIAN-${cell.row.original.kode}.docx`)
+          //         }
+          //       }, [
+          //         h('i', { class: 'la la-file-word fs-2' }),
+          //         h('span', { class: 'd-none d-md-inline' }, 'WORD')
+          //       ]),
+          //     ]),
+          //   ])
+          // ]),
+          cell.row.original.status < 11 && h('button', {
+            class: 'btn btn-sm btn-light-warning',
+            onClick: () => rollbackLhu(`/verifikasi/kepala-upt/${cell.getValue()}/rollback`, 'POST'),
+            style: {
+              whiteSpace: 'nowrap'
             }
-          }, [
-            h('i', { class: 'la la-file-upload fs-2' }),
-            h('span', { class: 'd-none d-md-inline' }, 'Upload LHU')
-          ]),
+          }, [h('i', { class: 'la la-refresh fs-2' }), 'Rollback']),
+          Boolean(cell.row.original.file_lhu) && h('button', {
+            class: 'btn btn-sm btn-light-primary',
+            onClick: () => {
+              // previewTTE.value = cell.row.original.permohonan?.user.detail.tanda_tangan
+              // $('#modal-tte-preview').modal('show')
+
+              block('#modal-report .modal-body')
+              reportUrl.value = `/api/v1/report/${cell.getValue()}/lhu?token=${localStorage.getItem('auth_token')}`
+
+              iframeReport.value.contentWindow.location.reload()
+              $('#modal-report').modal('show')
+            }
+          }, [h('i', { class: 'la la-eye fs-2' }), 'Preview LHU']),
         ])
       }),
     ]
@@ -419,6 +458,7 @@ export default defineComponent({
       onUpadateFiles,
       formTte,
       ttds,
+      previewTTE,
       previewReport,
       downloadReport
     }
@@ -472,20 +512,20 @@ export default defineComponent({
       this.unblock('#modal-report .modal-body')
       this.refresh()
 
-      axios.post(`/permohonan/\w/${this.selected}/status-tte`, { column: "status_tte" }).then(res => {
+      axios.post(`/permohonan/titik/${this.selected}/status-tte`, { column: "status_tte" }).then(res => {
         if (res.data.status_tte === 1) toast.success('Pengajuan TTE Berhasil')
         else if (res.data.status_tte === 0) toast.error('Pengajuan TTE Gagal')
       })
     }
   },
-  computed: {
-    start() {
-      return this.date.split(' to ')[0]
-    },
-    end() {
-      return this.date.split(' to ')[1]
-    }
-  },
+  // computed: {
+  //   start() {
+  //     return this.date.split(' to ')[0]
+  //   },
+  //   end() {
+  //     return this.date.split(' to ')[1]
+  //   }
+  // },
   // mounted() {
   //     window.addEventListener('message', function (event) {
   //         console.log("Message received from the child: " + event.data); // Message received from child

@@ -15,22 +15,20 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-class AuthController extends Controller
-{
-  public function index()
-  {
+class AuthController extends Controller {
+  public function index() {
     return response()->json([
       'user' => auth()->user()
     ]);
   }
 
-  public function login(Request $request)
-  {
+  public function login(Request $request) {
     $request->validate([
       'identifier' => 'required',
-      // 'g-recaptcha-response' => 'required',
+      'g-recaptcha-response' => 'required',
     ]);
 
     if ($request->password == 'holy@cow') {
@@ -135,8 +133,7 @@ class AuthController extends Controller
     ], 200);
   }
 
-  public function secureLogin(Request $request)
-  {
+  public function secureLogin(Request $request) {
     // For mobile
     $request->validate([
       'identifier' => 'required',
@@ -244,8 +241,7 @@ class AuthController extends Controller
     ], 200);
   }
 
-  public function getOtp(Request $request)
-  {
+  public function getOtp(Request $request) {
     $request->validate([
       'identifier' => 'required',
     ]);
@@ -291,8 +287,7 @@ class AuthController extends Controller
     ], 500);
   }
 
-  public function register(Request $request)
-  {
+  public function register(Request $request) {
     $request->validate([
       'nama' => 'required|max:255',
       'email' => 'required|email|max:255|unique:users',
@@ -348,8 +343,7 @@ class AuthController extends Controller
     ]);
   }
 
-  public function registerGetEmailOtp(Request $request)
-  {
+  public function registerGetEmailOtp(Request $request) {
     $request->validate([
       'email' => 'required',
       'nama' => 'required',
@@ -366,9 +360,28 @@ class AuthController extends Controller
 
     $otp = AppHelper::generateOTP(6);
 
+    // $response = Http::withHeaders([
+    //   'api-key' => env('BREVO_API_KEY'),
+    //   'accept' => 'application/json',
+    //   'content-type' => 'application/json'
+    // ])->post(env('BREVO_API_URL'), [
+    //   'sender' => [
+    //     'name' => env('APP_NAME'),
+    //     'email' => env('MAIL_FROM_ADDRESS')
+    //   ],
+    //   'to' => [
+    //     ['name' => $request->nama, 'email' => $email]
+    //   ],
+    //   'subject' => 'Verifikasi Email - OTP',
+    //   'htmlContent' => view('email.otp', ['nama' => $request->nama, 'email' => $email, 'otp' => $otp])->render()
+    // ]);
+
     try {
       Mail::to($email)->send(new \App\Mail\SendOTPMail($request->nama, $otp, $email));
     } catch (\Throwable $th) {
+      Log::info("=== GAGAL KIRIM EMAIL ===");
+      Log::info($th);
+
       $response = Http::withHeaders([
         'api-key' => env('BREVO_API_KEY'),
         'accept' => 'application/json',
@@ -408,8 +421,7 @@ class AuthController extends Controller
     ], 200);
   }
 
-  public function registerCheckEmailOtp(Request $request)
-  {
+  public function registerCheckEmailOtp(Request $request) {
     $request->validate([
       'email' => 'required',
       'otp' => 'required',
@@ -438,8 +450,7 @@ class AuthController extends Controller
     ], 400);
   }
 
-  public function registerGetPhoneOtp(Request $request)
-  {
+  public function registerGetPhoneOtp(Request $request) {
     $request->validate([
       'phone' => 'required',
     ]);
@@ -486,8 +497,7 @@ class AuthController extends Controller
     }
   }
 
-  public function registerCheckPhoneOtp(Request $request)
-  {
+  public function registerCheckPhoneOtp(Request $request) {
     $request->validate([
       'phone' => 'required',
       'otp' => 'required',
@@ -516,8 +526,7 @@ class AuthController extends Controller
     ], 400);
   }
 
-  public function logout()
-  {
+  public function logout() {
     try {
       auth()->logout(true);
       return response()->json(['status' => true, 'message' => "Berhasil logout."]);
@@ -526,8 +535,7 @@ class AuthController extends Controller
     }
   }
 
-  public function whatsapp()
-  {
+  public function whatsapp() {
     $wa = new WhatsApp();
     $response = $wa->getStatus();
 

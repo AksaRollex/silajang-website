@@ -50,10 +50,15 @@ class TitikPermohonan extends Model {
     'file_lhu',
     'save_parameter',
     'user_has_va',
+    'can_upload',
+    'verifikasi_lhu',
+
     'status_tte', // LHU
     'status_tte_skrd',
     'status_tte_kwitansi',
     'status_tte_kendali_mutu',
+
+    'payment_type'
   ];
   protected $appends = ['pakets', 'tanggal', 'text_status', 'text_status_pembayaran', 'harga', 'is_has_subkontrak', 'tanggal_mulai_uji', 'tanggal_selesai_uji', 'jam_datang_uji', 'pengambil', 'jenis_wadahs_id', 'tte_lhu', 'tte_skrd', 'tte_kwitansi', 'tte_kendali_mutu'];
   protected $with = ['jenisSampel', 'jenisWadah', 'jenisWadahs', 'parameters', 'peraturan', 'lapangan'];
@@ -69,10 +74,6 @@ class TitikPermohonan extends Model {
 
   public function logTtes() {
     return $this->hasMany(LogTTE::class);
-  }
-
-  public function logBankJatims() {
-    return $this->hasMany(LogBankJatim::class);
   }
 
   public function petugasPengambils() {
@@ -98,6 +99,8 @@ class TitikPermohonan extends Model {
   public function parameters() {
     return $this->belongsToMany(Parameter::class, 'titik_permohonan_parameters')
       ->withPivot(
+        'created_at',
+        'updated_at',
         'harga',
         'satuan',
         'baku_mutu',
@@ -369,7 +372,7 @@ class TitikPermohonan extends Model {
 
     if ($allFilled) {
       if ($currentStatus < 5) {
-        $this->update(['status' => 5]);
+        $this->update(['status' => 5, 'keterangan_revisi' => null]);
         TrackingPengujian::create(['titik_permohonan_id' => $this->id, 'status' => 4]);
         TrackingPengujian::create(['titik_permohonan_id' => $this->id, 'status' => 5]);
       }
@@ -395,10 +398,10 @@ class TitikPermohonan extends Model {
     }
 
     if ($allFilled) {
-      if ($currentStatus < 7) {
-        $this->update(['status' => 7]);
+      if ($currentStatus < 6) {
+        $this->update(['status' => 6, 'keterangan_revisi' => null]);
         TrackingPengujian::create(['titik_permohonan_id' => $this->id, 'status' => 6]);
-        TrackingPengujian::create(['titik_permohonan_id' => $this->id, 'status' => 7]);
+        // TrackingPengujian::create(['titik_permohonan_id' => $this->id, 'status' => 7]);
 
         $this->genNoLhu();
       }
@@ -489,9 +492,14 @@ class TitikPermohonan extends Model {
 
   protected static function booted() {
     static::updated(function (TitikPermohonan $titik) {
-      if ($titik->status > 1 && $titik->permohonan()->first()->user()->first()->golongan_id == 1 && $titik->status_pembayaran == 0) {
+      if ($titik->status == 3 && $titik->permohonan()->first()->user()->first()->golongan_id == 1 && $titik->status_pembayaran == 0) {
         $pembayaran = new PembayaranController();
-        $pembayaran->store(request(), $titik->uuid);
+
+        if ($titik->payment_type == "va") {
+          $pembayaran->store(request(), $titik->uuid, true);
+        } else {
+          $pembayaran->storeQr(request(), $titik->uuid, true);
+        }
       }
 
       // if ($titik->status == 9 && $titik->status_pembayaran == 1) {

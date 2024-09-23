@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Bukti Pembayaran {{ $data->no_formulir }}</title>
+    <title>Bukti Pembayaran {{ request()->multi_payment == 1 ? $data->kode : $data->no_formulir }}</title>
     <style>
         :root {
             font-size: 16px;
@@ -106,14 +106,20 @@
                 <div>Sudah diterima dari</div>
             </td>
             <td style="width: 20px; text-align: center">:</td>
-            <td>{{ $data->permohonan->user->nama }} / {{ $data->permohonan->user->detail->instansi }}</td>
+            <td>{{ $permohonan->user->nama }} / {{ $permohonan->user->detail->instansi }}</td>
         </tr>
         <tr>
             <td style="width: 30%">
                 <div>Buat Pembayaran</div>
             </td>
             <td style="width: 20px; text-align: center">:</td>
-            <td>Pengujian Laboratorium untuk Sampel dengan Kode {{ $data->kode }}</td>
+            @if (request()->multi_payment == 1)
+                <td>Pengujian Laboratorium untuk Sampel dengan Kode
+                    {{ $data->multiPayments->map(fn($item) => $item->titikPermohonan->kode)->join(', ', ', dan ') }}
+                </td>
+            @else
+                <td>Pengujian Laboratorium untuk Sampel dengan Kode {{ $data->kode }}</td>
+            @endif
         </tr>
     </table>
 
@@ -121,13 +127,16 @@
         <tr>
             <td style="width: 60%; vertical-align: top">
                 <div>
-                    <em>Terbilang {{ App\Helpers\AppHelper::AngkaToText($data->payment->jumlah) }} Rupiah</em>
+                    <em>Terbilang
+                        {{ App\Helpers\AppHelper::AngkaToText(request()->multi_payment == 1 ? $data->jumlah : $data->payment->jumlah) }}
+                        Rupiah</em>
                 </div>
                 <span
-                    style="display: inline-block; margin-top: 1rem; padding: 0.5rem; border: 1px solid #000">{{ App\Helpers\AppHelper::rupiah($data->payment->jumlah) }}</span>
+                    style="display: inline-block; margin-top: 1rem; padding: 0.5rem; border: 1px solid #000">{{ App\Helpers\AppHelper::rupiah(request()->multi_payment == 1 ? $data->jumlah : $data->payment->jumlah) }}</span>
             </td>
             <td style="width: 40%; text-align: center">
-                <div>Jombang, {{ App\Helpers\AppHelper::tanggal_indo($data->payment->tanggal_bayar ?? date('Y-m-d')) }}
+                <div>Jombang,
+                    {{ App\Helpers\AppHelper::tanggal_indo(request()->multi_payment == 1 ? $data->tanggal_bayar : $data->payment->tanggal_bayar ?? date('Y-m-d')) }}
                 </div>
                 <div>Yang Menerima</div>
                 <div>UPT Laboratorium Lingkungan</div>

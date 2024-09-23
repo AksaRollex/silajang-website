@@ -156,14 +156,14 @@
                             V
                         @endif
                     </span>
-                    <span style="margin-right: 2rem">Ada</span>
+                    <span style="margin-right: 2rem">Normal</span>
 
                     <span class="checkbox check">
                         @if ($data->kondisi_sampel == 0)
                             V
                         @endif
                     </span>
-                    <span>Tidak</span>
+                    <span>Abnormal</span>
                 </div>
                 @if ($data->kondisi_sampel == 0)
                     <div style="margin-top: 1rem">Keterangan: {{ $data->keterangan_kondisi_sampel }}</div>
@@ -391,12 +391,12 @@
     </table>
 
     @if ($data->keterangan !== null)
-    <table style="margin-top: 1rem">
-        <tr>
-            <td>Keterangan :</td>
-            <td>{{ $data->keterangan }}</td>
-        </tr>
-    </table>
+        <table style="margin-top: 1rem">
+            <tr>
+                <td>Keterangan :</td>
+                <td>{{ $data->keterangan }}</td>
+            </tr>
+        </table>
     @endif
 </body>
 
