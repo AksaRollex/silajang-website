@@ -1,90 +1,90 @@
 <template>
-    <VForm class="form w-100" @submit="submit" :validation-schema="login">
-        <!--begin::Input group-->
-        <div class="fv-row mb-10">
-            <!--begin::Label-->
-            <label class="form-label fs-6 fw-bold text-dark">Email</label>
-            <!--end::Label-->
+  <VForm class="form w-100" @submit="submit" :validation-schema="login">
+    <!--begin::Input group-->
+    <div class="fv-row mb-10">
+      <!--begin::Label-->
+      <label class="form-label fs-6 fw-bold text-dark">Email</label>
+      <!--end::Label-->
 
-            <!--begin::Input-->
-            <Field tabindex="1" class="form-control form-control-lg form-control-solid" type="text" name="identifier"
-                autocomplete="off" v-model="data.identifier" />
-            <!--end::Input-->
-            <div class="fv-plugins-message-container">
-                <div class="fv-help-block">
-                    <ErrorMessage name="identifier" />
-                </div>
-            </div>
+      <!--begin::Input-->
+      <Field tabindex="1" class="form-control form-control-lg form-control-solid" type="text" name="identifier"
+        autocomplete="off" v-model="data.identifier" />
+      <!--end::Input-->
+      <div class="fv-plugins-message-container">
+        <div class="fv-help-block">
+          <ErrorMessage name="identifier" />
         </div>
-        <!--end::Input group-->
+      </div>
+    </div>
+    <!--end::Input group-->
 
-        <!--begin::Input group-->
-        <div class="fv-row mb-5">
-            <!--begin::Wrapper-->
-            <div class="d-flex flex-stack mb-2">
-                <!--begin::Label-->
-                <label class="form-label fw-bold text-dark fs-6 mb-0">Password</label>
-                <!--end::Label-->
+    <!--begin::Input group-->
+    <div class="fv-row mb-5">
+      <!--begin::Wrapper-->
+      <div class="d-flex flex-stack mb-2">
+        <!--begin::Label-->
+        <label class="form-label fw-bold text-dark fs-6 mb-0">Password</label>
+        <!--end::Label-->
 
-                <!--begin::Link-->
-                <!-- <router-link to="/password-reset" class="link-primary fs-6 fw-bold">
+        <!--begin::Link-->
+        <!-- <router-link to="/password-reset" class="link-primary fs-6 fw-bold">
               Forgot Password ?
             </router-link> -->
-                <!--end::Link-->
-            </div>
-            <!--end::Wrapper-->
+        <!--end::Link-->
+      </div>
+      <!--end::Wrapper-->
 
-            <!--begin::Input-->
-            <div class="position-relative mb-3">
-                <!--begin::Input-->
-                <Field tabindex="2" class="form-control form-control-lg form-control-solid" type="password" name="password"
-                    v-model="data.password" autocomplete="off" />
-                <!--end::Input-->
+      <!--begin::Input-->
+      <div class="position-relative mb-3">
+        <!--begin::Input-->
+        <Field tabindex="2" class="form-control form-control-lg form-control-solid" type="password" name="password"
+          v-model="data.password" autocomplete="off" />
+        <!--end::Input-->
 
-                <!--begin::Visibility toggle-->
-                <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2">
-                    <i class="bi bi-eye-slash fs-2" @click="togglePassword"></i>
-                </span>
-                <!--end::Visibility toggle-->
-            </div>
-            <!--end::Input-->
-            <div class="fv-plugins-message-container">
-                <div class="fv-help-block">
-                    <ErrorMessage name="password" />
-                </div>
-            </div>
+        <!--begin::Visibility toggle-->
+        <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2">
+          <i class="bi bi-eye-slash fs-2" @click="togglePassword"></i>
+        </span>
+        <!--end::Visibility toggle-->
+      </div>
+      <!--end::Input-->
+      <div class="fv-plugins-message-container">
+        <div class="fv-help-block">
+          <ErrorMessage name="password" />
         </div>
-        <!--end::Input group-->
+      </div>
+    </div>
+    <!--end::Input group-->
 
-        <div class="form-check mb-10">
-            <Field tabindex="3" class="form-check-input" type="checkbox" id="remember_me" name="remember_me" value="1"
-                v-model="data.remember_me" />
-            <label class="form-check-label" for="remember_me">
-                {{ $t('login.remember') }}
-            </label>
-        </div>
+    <div class="form-check mb-10">
+      <Field tabindex="3" class="form-check-input" type="checkbox" id="remember_me" name="remember_me" value="1"
+        v-model="data.remember_me" />
+      <label class="form-check-label" for="remember_me">
+        {{ $t('login.remember') }}
+      </label>
+    </div>
 
-        <div class="fv-row mb-5">
-            <vue-recaptcha :sitekey="captchaSiteKey" size="normal" theme="light" @verify="recaptchaVerified"
-                @expire="recaptchaExpired" @fail="recaptchaFailed" @error="recaptchaError" ref="captcha">
-            </vue-recaptcha>
-        </div>
+    <div class="fv-row mb-5">
+      <vue-recaptcha :sitekey="captchaSiteKey" size="normal" theme="light" @verify="recaptchaVerified"
+        @expire="recaptchaExpired" @fail="recaptchaFailed" @error="recaptchaError" ref="captcha">
+      </vue-recaptcha>
+    </div>
 
-        <!--begin::Actions-->
-        <div class="text-center">
-            <!--begin::Submit button-->
-            <button tabindex="3" type="submit" ref="submitButton" class="btn btn-lg btn-primary w-100 mb-5"
-                >
-                <span class="indicator-label">Login</span>
+    <!--begin::Actions-->
+    <div class="text-center">
+      <!--begin::Submit button-->
+      <button tabindex="3" type="submit" ref="submitButton" class="btn btn-lg btn-primary w-100 mb-5"
+        :disabled="!captchaResponse">
+        <span class="indicator-label">Login</span>
 
-                <span class="indicator-progress">
-                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                </span>
-            </button>
-            <!--end::Submit button-->
-        </div>
-        <!--end::Actions-->
-    </VForm>
+        <span class="indicator-progress">
+          <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+        </span>
+      </button>
+      <!--end::Submit button-->
+    </div>
+    <!--end::Actions-->
+  </VForm>
 </template>
 
 <script lang="ts">
@@ -100,78 +100,78 @@ import { blockBtn, unblockBtn } from "@/libs/utils"
 import vueRecaptcha from 'vue3-recaptcha2';
 
 export default defineComponent({
-    components: {
-        vueRecaptcha
+  components: {
+    vueRecaptcha
+  },
+  setup() {
+    const store = useAuthStore();
+    const router = useRouter();
+
+    const submitButton = ref(null);
+
+    //Create form validation object
+    const login = Yup.object().shape({
+      identifier: Yup.string().email('Email tidak valid').required("Harap masukkan Email").label("Email"),
+      password: Yup.string().min(8, 'Password minimal terdiri dari 8 karakter').required('Harap masukkan password').label("Password"),
+    });
+
+    const captcha = ref()
+    const captchaResponse = ref()
+
+    return {
+      login,
+      submitButton,
+      getAssetPath,
+      store, router,
+      captcha, captchaResponse
+    };
+  },
+  data() {
+    return {
+      captchaSiteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+      data: {
+        identifier: null,
+        password: null
+      },
+    }
+  },
+  methods: {
+    recaptchaVerified(response) {
+      this.captchaResponse = response
     },
-    setup() {
-        const store = useAuthStore();
-        const router = useRouter();
-
-        const submitButton = ref(null);
-
-        //Create form validation object
-        const login = Yup.object().shape({
-            identifier: Yup.string().email('Email tidak valid').required("Harap masukkan Email").label("Email"),
-            password: Yup.string().min(8, 'Password minimal terdiri dari 8 karakter').required('Harap masukkan password').label("Password"),
-        });
-
-        const captcha = ref()
-        const captchaResponse = ref()
-
-        return {
-            login,
-            submitButton,
-            getAssetPath,
-            store, router,
-            captcha, captchaResponse
-        };
+    recaptchaExpired() {
+      this.captcha.reset()
     },
-    data() {
-        return {
-            captchaSiteKey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
-            data: {
-                identifier: null,
-                password: null
-            },
-        }
+    recaptchaFailed() {
     },
-    methods: {
-        recaptchaVerified(response) {
-            this.captchaResponse = response
-        },
-        recaptchaExpired() {
-            this.captcha.reset()
-        },
-        recaptchaFailed() {
-        },
-        recaptchaError(reason) {
-        },
-        submit() {
-            blockBtn(this.submitButton);
-
-            axios.post("/auth/login", { ...this.data, type: "email", 'g-recaptcha-response': this.captchaResponse }).then(res => {
-                this.store.setAuth(res.data.user, res.data.token);
-                this.router.push("/dashboard");
-            }).catch(error => {
-                toast.error(error.response.data.message);
-            }).finally(() => {
-                unblockBtn(this.submitButton);
-            });
-        },
-        togglePassword(ev) {
-            const type = document.querySelector("[name=password]").type;
-
-            if (type === 'password') {
-                document.querySelector("[name=password]").type = 'text';
-                ev.target.classList.add("bi-eye");
-                ev.target.classList.remove("bi-eye-slash");
-            } else {
-                document.querySelector("[name=password]").type = 'password';
-                ev.target.classList.remove("bi-eye");
-                ev.target.classList.add("bi-eye-slash");
-            }
-
-        }
+    recaptchaError(reason) {
     },
+    submit() {
+      blockBtn(this.submitButton);
+
+      axios.post("/auth/login", { ...this.data, type: "email", 'g-recaptcha-response': this.captchaResponse }).then(res => {
+        this.store.setAuth(res.data.user, res.data.token);
+        this.router.push("/dashboard");
+      }).catch(error => {
+        toast.error(error.response.data.message);
+      }).finally(() => {
+        unblockBtn(this.submitButton);
+      });
+    },
+    togglePassword(ev) {
+      const type = document.querySelector("[name=password]").type;
+
+      if (type === 'password') {
+        document.querySelector("[name=password]").type = 'text';
+        ev.target.classList.add("bi-eye");
+        ev.target.classList.remove("bi-eye-slash");
+      } else {
+        document.querySelector("[name=password]").type = 'password';
+        ev.target.classList.remove("bi-eye");
+        ev.target.classList.add("bi-eye-slash");
+      }
+
+    }
+  },
 })
 </script>

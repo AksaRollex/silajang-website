@@ -49,6 +49,7 @@ use App\Http\Controllers\TTEController;
 use App\Http\Controllers\UmpanBalikController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserParameterController;
+use App\Http\Controllers\KontrakController;
 
 /*
 |--------------------------------------------------------------------------
@@ -468,6 +469,12 @@ Route::prefix('v1')->middleware(['json'])->group(function () {
     });
 
     Route::prefix('administrasi')->group(function () {
+      Route::prefix('kontrak')->middleware(['role:admin'])->group(function () {
+        Route::post('', [KontrakController::class, 'index']);
+        Route::get('{uuid}', [KontrakController::class, 'show']);
+        Route::post('{uuid}/update', [KontrakController::class, 'update']);
+      });
+
       Route::prefix('pengambil-sample')->middleware(['role:admin|pengambil-sample|koordinator-administrasi'])->group(function () {
         Route::post('', [PengambilSampelController::class, 'index']);
         Route::get('petugas', [PengambilSampelController::class, 'petugas']);
@@ -484,6 +491,8 @@ Route::prefix('v1')->middleware(['json'])->group(function () {
         Route::post('{uuid}/update-status', [PenerimaSampelController::class, 'updateStatus']);
         Route::post('{uuid}/revisi', [PenerimaSampelController::class, 'revisi']);
       });
+      Route::post('cetak-lhu', [KoordinatorTeknisController::class, 'cetakLHU'])->middleware(['role:koordinator-administrasi|admin|kepala-upt']);
+      Route::post('{uuid}/upload', [KoordinatorTeknisController::class, 'canUpload'])->middleware(['role:koordinator-administrasi|admin']);
     });
 
     Route::prefix('verifikasi')->group(function () {
@@ -498,13 +507,15 @@ Route::prefix('v1')->middleware(['json'])->group(function () {
         Route::get('{uuid}', [KoordinatorTeknisController::class, 'show']);
         Route::post('{uuid}/fill-parameter', [KoordinatorTeknisController::class, 'fillParameter']);
         Route::post('{uuid}/reject', [KoordinatorTeknisController::class, 'reject']);
+        Route::post('revisi/{uuid}', [KoordinatorTeknisController::class, 'revisi']);
       });
 
-      Route::prefix('kepala-upt')->middleware(['role:admin|kepala-upt'])->group(function () {
+      Route::prefix('kepala-upt')->middleware(['role:admin|kepala-upt|koordinator-teknis'])->group(function () {
         Route::post('', [KepalaUPTController::class, 'index']);
         Route::get('{uuid}', [KepalaUPTController::class, 'show']);
         Route::post('{uuid}/verify', [KepalaUPTController::class, 'verify']);
         Route::post('{uuid}/rollback', [KepalaUPTController::class, 'rollback']);
+        Route::post('{uuid}/rollback-verif', [KepalaUPTController::class, 'rollbackVerif']);
       });
     });
 
@@ -560,6 +571,7 @@ Route::prefix('v1')->middleware(['auth'])->group(function () {
 
     Route::get('{uuid}/lhu/word', [ReportController::class, 'reportLHUWord']);
     Route::get('{uuid}/lhu/{save?}/{tte?}', [ReportController::class, 'reportLHU']);
+    Route::get('{uuid}/cetak-lhu/{save?}/{tte?}', [ReportController::class, 'reportCetakLHU']);
 
     Route::get('{uuid}/kendali-mutu', [ReportController::class, 'reportKendaliMutu']);
     Route::get('{uuid}/kendali-mutu/tte', [TTEController::class, 'postKendaliMutu']);
