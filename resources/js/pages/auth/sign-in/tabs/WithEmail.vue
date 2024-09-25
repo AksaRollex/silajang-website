@@ -63,18 +63,18 @@
         {{ $t('login.remember') }}
       </label>
     </div>
-
+<!-- 
     <div class="fv-row mb-5">
       <vue-recaptcha :sitekey="captchaSiteKey" size="normal" theme="light" @verify="recaptchaVerified"
         @expire="recaptchaExpired" @fail="recaptchaFailed" @error="recaptchaError" ref="captcha">
       </vue-recaptcha>
-    </div>
+    </div> -->
 
     <!--begin::Actions-->
     <div class="text-center">
       <!--begin::Submit button-->
       <button tabindex="3" type="submit" ref="submitButton" class="btn btn-lg btn-primary w-100 mb-5"
-        :disabled="!captchaResponse">
+       >
         <span class="indicator-label">Login</span>
 
         <span class="indicator-progress">

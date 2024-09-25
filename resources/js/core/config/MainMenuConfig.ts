@@ -150,6 +150,7 @@ const MainMenuConfig: Array<MenuItem> = [
         keenthemesIcon: "wallet",
         route: "/dashboard/pembayaran/customer",
       },
+     
       {
         heading: "Multi Payment",
         name: "pembayaran-multi",

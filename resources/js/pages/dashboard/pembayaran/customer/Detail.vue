@@ -167,7 +167,7 @@ import { toast } from 'vue3-toastify';
 import moment from 'moment';
 import { useSwalConfirm } from '@/libs/hooks';
 import { useSetting } from '@/services';
-import QRCode from 'qrcode';
+// import QRCode from 'qrcode';
 
 interface FormData {
   uuid: string;

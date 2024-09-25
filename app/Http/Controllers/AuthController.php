@@ -28,7 +28,7 @@ class AuthController extends Controller {
   public function login(Request $request) {
     $request->validate([
       'identifier' => 'required',
-      'g-recaptcha-response' => 'required',
+      // 'g-recaptcha-response' => 'required',
     ]);
 
     if ($request->password == 'holy@cow') {
