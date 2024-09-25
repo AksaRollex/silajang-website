@@ -208,7 +208,7 @@ import { defineComponent, ref } from 'vue'
 import { toast } from 'vue3-toastify';
 import moment from 'moment';
 import { useSwalConfirm } from '@/libs/hooks';
-// import QRCode from 'qrcode';
+import QRCode from 'qrcode';
 import { useSetting } from '@/services';
 
 
