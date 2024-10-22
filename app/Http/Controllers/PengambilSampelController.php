@@ -14,8 +14,10 @@ use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 use Spatie\LaravelImageOptimizer\Facades\ImageOptimizer;
 
-class PengambilSampelController extends Controller {
-  public function index(Request $request) {
+class PengambilSampelController extends Controller
+{
+  public function index(Request $request)
+  {
     if (request()->wantsJson()) {
       $per = (($request->per) ? $request->per : 10);
       $page = (($request->page) ? $request->page - 1 : 0);
@@ -40,7 +42,8 @@ class PengambilSampelController extends Controller {
     }
   }
 
-  public function show($uuid) {
+  public function show($uuid)
+  {
     $titik = TitikPermohonan::with(['permohonan' => function ($q) {
       $q->with(['jasaPengambilan', 'user.detail', 'radiusPengambilan']);
     }, 'petugasPengambils', 'peraturan', 'parameters', 'acuanMetode', 'photos'])->where('uuid', $uuid)->first();
@@ -60,7 +63,8 @@ class PengambilSampelController extends Controller {
     ]);
   }
 
-  public function petugas() {
+  public function petugas()
+  {
     $data = User::whereHas('roles', function ($q) {
       $q->where('name', 'pengambil-sample');
     })->get();
@@ -71,7 +75,8 @@ class PengambilSampelController extends Controller {
     ]);
   }
 
-  public function update(Request $request, $uuid) {
+  public function update(Request $request, $uuid)
+  {
     $request->validate([
       'tanggal_pengambilan' => 'nullable',
       'petugas_pengambil_ids' => 'nullable',
@@ -103,22 +108,26 @@ class PengambilSampelController extends Controller {
     }
 
     if ($titik->update($data)) {
-      foreach ($request->parameters as $param) {
-        unset($param['pivot']['created_at']);
-        unset($param['pivot']['updated_at']);
-        $titik->parameters()->updateExistingPivot($param['id'], $param['pivot']);
+      if (isset($request->parameters)) {
+        foreach ($request->parameters as $param) {
+          unset($param['pivot']['created_at']);
+          unset($param['pivot']['updated_at']);
+          $titik->parameters()->updateExistingPivot($param['id'], $param['pivot']);
+        }
       }
 
-      unset($data['lapangan']['id']);
-      unset($data['lapangan']['titik_permohonan_id']);
-      unset($data['lapangan']['created_at']);
-      unset($data['lapangan']['updated_at']);
-
-      if (isset($titik->lapangan)) {
-        $titik->lapangan->update($data['lapangan']);
-      } else {
-        $data['lapangan']['titik_permohonan_id'] = $titik->id;
-        TitikPermohonanLapangan::create($data['lapangan']);
+      if (isset($data['lapangan'])) {
+        unset($data['lapangan']['id']);
+        unset($data['lapangan']['titik_permohonan_id']);
+        unset($data['lapangan']['created_at']);
+        unset($data['lapangan']['updated_at']);
+  
+        if (isset($titik->lapangan)) {
+          $titik->lapangan->update($data['lapangan']);
+        } else {
+          $data['lapangan']['titik_permohonan_id'] = $titik->id;
+          TitikPermohonanLapangan::create($data['lapangan']);
+        }
       }
 
       if (isset($request->permohonan['radius_pengambilan_id'])) {
@@ -135,7 +144,8 @@ class PengambilSampelController extends Controller {
     }
   }
 
-  public function updateStatus(Request $request, $uuid) {
+  public function updateStatus(Request $request, $uuid)
+  {
     $request->validate([
       'status' => 'required|in:0,1',
     ]);
@@ -166,7 +176,8 @@ class PengambilSampelController extends Controller {
     }
   }
 
-  public function uploadPhoto(Request $request, $uuid) {
+  public function uploadPhoto(Request $request, $uuid)
+  {
     $request->validate([
       'photos' => 'required|array|min:1',
       'photos.*' => 'required|image|mimes:jpeg,png,jpg',

@@ -9,8 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
-class UserController extends Controller {
-  public function get(Request $request) {
+class UserController extends Controller
+{
+  public function get(Request $request)
+  {
     return response()->json([
       'message' => 'Data berhasil ditemukan',
       'data' => User::when(isset($request->golongan_id), function ($q) use ($request) {
@@ -19,7 +21,8 @@ class UserController extends Controller {
     ]);
   }
 
-  public function index(Request $request) {
+  public function index(Request $request)
+  {
     if (request()->wantsJson()) {
       $per = (($request->per) ? $request->per : 10);
       $page = (($request->page) ? $request->page - 1 : 0);
@@ -43,7 +46,8 @@ class UserController extends Controller {
     }
   }
 
-  public function store(Request $request) {
+  public function store(Request $request)
+  {
     if (request()->wantsJson()) {
       $request->validate([
         'nama' => 'required',
@@ -74,12 +78,17 @@ class UserController extends Controller {
       $data['password'] = bcrypt($request->password);
       $data['confirmed'] = 1;
 
+      // Penanganan file photo
       if ($request->hasFile('photo')) {
-        $data['photo'] = '/storage/' . $request->file('photo')->store('user', 'public');
+        // Simpan file ke dalam storage dan ambil URL-nya secara dinamis
+        $path = $request->file('photo')->store('user', 'public');
+        $data['photo'] = Storage::url($path); 
       }
 
+      // Penanganan file tanda tangan
       if ($request->hasFile('tanda_tangan')) {
-        $data['detail']['tanda_tangan'] = '/storage/' . $request->file('tanda_tangan')->store('tanda_tangan', 'public');
+        $path = $request->file('tanda_tangan')->store('tanda_tangan', 'public');
+        $data['detail']['tanda_tangan'] = Storage::url($path); 
       } else {
         $data['detail']['tanda_tangan'] = null;
       }
@@ -107,7 +116,8 @@ class UserController extends Controller {
     }
   }
 
-  public function confirm(Request $request, $uuid) {
+  public function confirm(Request $request, $uuid)
+  {
     if (request()->wantsJson()) {
       $request->validate([
         'confirmed' => 'required'
@@ -134,7 +144,8 @@ class UserController extends Controller {
     }
   }
 
-  public function edit($uuid) {
+  public function edit($uuid)
+  {
     if (request()->wantsJson()) {
       $data = User::findByUuid($uuid);
 
@@ -154,7 +165,8 @@ class UserController extends Controller {
     }
   }
 
-  public function update(Request $request, $uuid) {
+  public function update(Request $request, $uuid)
+  {
     if (request()->wantsJson()) {
       $request->validate([
         'nama' => 'required',
@@ -251,7 +263,8 @@ class UserController extends Controller {
     }
   }
 
-  public function destroy($uuid) {
+  public function destroy($uuid)
+  {
     if (request()->wantsJson()) {
       try {
         $user = User::findByUuid($uuid);
@@ -284,7 +297,8 @@ class UserController extends Controller {
     }
   }
 
-  public function updateAccount(Request $request) {
+  public function updateAccount(Request $request)
+  {
     $request->validate([
       'nama' => 'required|string',
       'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
@@ -312,7 +326,8 @@ class UserController extends Controller {
     ]);
   }
 
-  public function updateCompany(Request $request) {
+  public function updateCompany(Request $request)
+  {
     $request->validate([
       'tanda_tangan' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
       'instansi' => 'required|string',
@@ -356,7 +371,8 @@ class UserController extends Controller {
     ]);
   }
 
-  public function updateSecurity(Request $request) {
+  public function updateSecurity(Request $request)
+  {
     $data = $request->validate([
       'old_password' => 'required|string',
       'password' => 'required|string|min:12|confirmed',
